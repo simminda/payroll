@@ -1,10 +1,24 @@
 from django.db import models
+from decimal import Decimal
+from django.conf import settings
+
+
+from django.db import models
+from django.conf import settings
+from django.utils import timezone
 
 class Employee(models.Model):
     """
     Represents an employee in the payroll system.
     Stores both salaried and wage-based employee details.
     """
+    EMPLOYMENT_STATUSES = [
+        ('active', 'Active'),
+        ('terminated', 'Terminated'),
+        ('suspended', 'Suspended'),
+        ('on_leave', 'On Leave'),
+    ]
+
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     id_number = models.CharField(max_length=13)
@@ -13,9 +27,41 @@ class Employee(models.Model):
     is_wage_employee = models.BooleanField(default=False)
     hourly_rate = models.DecimalField(max_digits=7, decimal_places=2, blank=True, null=True)
     profile_picture = models.ImageField(upload_to='employee_pictures/', blank=True, null=True)
+    department = models.CharField(max_length=100, blank=True, null=True)
+    job_title = models.CharField(max_length=100, blank=True, null=True)
+    status = models.CharField(max_length=20, choices=EMPLOYMENT_STATUSES, default='active')
+    status_changed_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
+
+    def calculate_hourly_rate(self, config=None):
+        if config:
+            monthly_hours = config.monthly_hours()
+        else:
+            weekly_hours = getattr(settings, 'DEFAULT_WEEKLY_HOURS', 45)
+            monthly_hours = weekly_hours * 4.33  # Approximate weeks/month
+        return self.salary / monthly_hours if self.salary else None
+
+    def save(self, *args, **kwargs):
+        # Handle status change timestamp
+        if self.pk:
+            old = Employee.objects.get(pk=self.pk)
+            if old.status != self.status:
+                self.status_changed_at = timezone.now()
+        else:
+            self.status_changed_at = timezone.now()
+
+        # Handle hourly rate logic
+        if self.is_wage_employee:
+            if self.hourly_rate is None:
+                self.hourly_rate = 0
+        elif self.salary:
+            config = WorkingHoursConfig.objects.filter(active=True).first()
+            self.hourly_rate = self.calculate_hourly_rate(config)
+
+        super().save(*args, **kwargs)
+
 
 
 class PayrollRun(models.Model):
@@ -177,3 +223,19 @@ class CompanyContribution(models.Model):
 
     class Meta:
         unique_together = ('employee', 'payroll_run', 'contribution_type')
+
+
+class WorkingHoursConfig(models.Model):
+    weekly_hours = models.DecimalField(max_digits=4, decimal_places=2, default=45.0)
+    use_for_salaried_employees = models.BooleanField(default=True)
+    active = models.BooleanField(default=True)
+
+    def monthly_hours(self):
+        return self.weekly_hours * Decimal("4.33")  # approx weeks/month
+
+    def __str__(self):
+        return f"{self.weekly_hours} hours/week (active={self.active})"
+
+    class Meta:
+        verbose_name = "Working Hours Configuration"
+        verbose_name_plural = "Working Hours Configurations"

@@ -1,0 +1,39 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ employee.first_name }} {{ employee.last_name }}</title>
+</head>
+<body>
+    {% if messages %}
+        {% for message in messages %}
+            <p style="color: green;">{{ message }}</p>
+        {% endfor %}
+    {% endif %}
+
+    <h1>{{ employee.first_name }} {{ employee.last_name }}</h1>
+    {% if employee.profile_picture %}
+        <img src="{{ employee.profile_picture.url }}" alt="Profile Picture" height="150">
+    {% endif %}
+    <p><strong>Status:</strong> {{ employee.get_status_display }}</p>
+    <p><strong>Status Changed At:</strong> {{ employee.status_changed_at|date:"Y-m-d H:i" }}</p>
+    <br>
+    <p><strong>ID Number:</strong> {{ employee.id_number }}</p>
+    <p><strong>Tax Number:</strong> {{ employee.tax_number }}</p>
+    <p><strong>Department:</strong> {{ employee.department|default:"-" }}</p>
+    <p><strong>Job Title:</strong> {{ employee.job_title|default:"-" }}</p>
+    <p><strong>Salary:</strong> {% if employee.salary %}R{{ employee.salary }}{% else %}Not available{% endif %}</p>
+    <p><strong>Hourly Rate:</strong> {% if employee.hourly_rate %}R{{ employee.hourly_rate }}{% else %}Not available{% endif %}</p>
+    <p><strong>Wage Employee:</strong> {{ employee.is_wage_employee|yesno:"Yes,No" }}</p>
+
+    <!-- Edit Button -->
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editEmployeeModal">
+        Edit Employee
+    </button>
+  
+    <br>
+    <a href="{% url 'employee_list' %}">Back to All Employees</a>
+
+    {% include 'employees/_edit_employee_modal.html' %}
+</body>
+</html>

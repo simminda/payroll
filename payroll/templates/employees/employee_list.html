@@ -1,0 +1,22 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>All Employees</title>
+</head>
+<body>
+    <h1>Employees</h1>
+    <a href="{% url 'create_employee' %}">Add New Employee</a>
+    <ul>
+        {% for employee in employees %}
+            <li>
+                <a href="{% url 'employee_detail' employee.pk %}">
+                    {{ employee.first_name }} {{ employee.last_name }}
+                </a>
+            </li>
+        {% empty %}
+            <li>No employees found.</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
