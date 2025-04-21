@@ -2,6 +2,7 @@ from django import forms
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from .models import Employee, Company, CustomUser
 
+
 class EmployeeForm(forms.ModelForm):
     class Meta:
         model = Employee
@@ -11,7 +12,16 @@ class EmployeeForm(forms.ModelForm):
             'department', 'job_title', 'profile_picture'
         ]
         widgets = {
-            'is_wage_employee': forms.CheckboxInput(),
+            'first_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'id_number': forms.TextInput(attrs={'class': 'form-control'}),
+            'tax_number': forms.TextInput(attrs={'class': 'form-control'}),
+            'salary': forms.NumberInput(attrs={'class': 'form-control'}),
+            'hourly_rate': forms.NumberInput(attrs={'class': 'form-control'}),
+            'department': forms.Select(attrs={'class': 'form-select'}),
+            'job_title': forms.TextInput(attrs={'class': 'form-control'}),
+            'profile_picture': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+            'is_wage_employee': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
 
 

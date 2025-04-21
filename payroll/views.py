@@ -12,7 +12,11 @@ from .forms import CustomUserCreationForm
 def dashboard(request):
     company_id = request.session.get('company_id')
     company = Company.objects.get(id=company_id) if company_id else None
-    return render(request, 'payroll/dashboard.html', {'company': company})
+    active_employees = Employee.objects.filter(status='active').count()
+    return render(request, 'payroll/dashboard.html', {
+        'company': company,
+        'active_employees': active_employees
+        })
 
 
 def employee_list(request):
@@ -30,15 +34,17 @@ def employee_detail(request, pk):
         'company': company 
     })
 
+
 def create_employee(request):
     if request.method == 'POST':
         form = EmployeeForm(request.POST, request.FILES)
         if form.is_valid():
-            form.save()
-            return redirect('employee_success')  
+            employee = form.save()  # Capture the saved instance
+            return redirect('employee_detail', pk=employee.pk)  # Pass the PK here
     else:
         form = EmployeeForm()
     return render(request, 'employees/create_employee.html', {'form': form})
+
 
 def edit_employee(request, pk):
     employee = get_object_or_404(Employee, pk=pk)

@@ -55,6 +55,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'payroll.context_processors.current_company',
+                'payroll.context_processors.active_employees',
             ],
         },
     },

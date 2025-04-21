@@ -35,6 +35,16 @@ class Employee(models.Model):
         ('on_leave', 'On Leave'),
     ]
 
+    DEPARTMENT_CHOICES = [
+        ('Operations', 'Operations'),
+        ('Debtors', 'Debtors'),
+        ('Creditors', 'Creditors'),
+        ('Finance', 'Finance'),
+        ('Marketing', 'Marketing'),
+        ('Maintenance', 'Maintenance'),
+        ('Admin', 'Admin'),
+    ]
+
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     id_number = models.CharField(max_length=13)
@@ -44,7 +54,7 @@ class Employee(models.Model):
     hourly_rate = models.DecimalField(max_digits=7, decimal_places=2, blank=True, null=True)
     profile_picture = models.ImageField(upload_to='employee_pictures/', blank=True, null=True)
     company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name="employees", default=1)
-    department = models.CharField(max_length=100, blank=True, null=True)
+    department = models.CharField(max_length=50, choices=DEPARTMENT_CHOICES)
     job_title = models.CharField(max_length=100, blank=True, null=True)
     status = models.CharField(max_length=20, choices=EMPLOYMENT_STATUSES, default='active')
     status_changed_at = models.DateTimeField(null=True, blank=True)
@@ -57,7 +67,7 @@ class Employee(models.Model):
             monthly_hours = config.monthly_hours()
         else:
             weekly_hours = getattr(settings, 'DEFAULT_WEEKLY_HOURS', 45)
-            monthly_hours = weekly_hours * 4.33  # Approximate weeks/month
+            monthly_hours = Decimal(str(weekly_hours)) * Decimal('4.33')  # Apprx per week
         return self.salary / monthly_hours if self.salary else None
 
     def save(self, *args, **kwargs):
