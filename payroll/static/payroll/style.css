@@ -1,0 +1,43 @@
+/* Ensure full height layout for sticky footer */
+html, body {
+    height: 100%;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1 0 auto;
+}
+
+footer {
+    flex-shrink: 0;
+}
+
+/* Center navbar links with spacing */
+.navbar-nav.justify-content-center {
+    gap: 1.5rem;
+}
+
+/* Hover effect for main nav links */
+.navbar-nav .nav-item .nav-link {
+    transition: background-color 0.3s ease, color 0.3s ease;
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+}
+
+.navbar-nav .nav-item .nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+}
+
+/* Footer links */
+footer a {
+    transition: color 0.2s ease;
+}
+
+footer a:hover {
+    color: #0d6efd;
+}

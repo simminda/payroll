@@ -1,20 +1,19 @@
-{% load static %}
-<!DOCTYPE html>
-<html>
-<head>
-    <title>{{ employee.first_name }} {{ employee.last_name }}</title>
-</head>
-<body>
+{% extends "payroll/base.html" %}
+{% block title %}{{ employee.first_name }} {{ employee.last_name }}{% endblock %}
+
+{% block content %}
     {% if messages %}
         {% for message in messages %}
-            <p style="color: green;">{{ message }}</p>
+            <p class="text-success">{{ message }}</p>
         {% endfor %}
     {% endif %}
 
     <h1>{{ employee.first_name }} {{ employee.last_name }}</h1>
+
     {% if employee.profile_picture %}
         <img src="{{ employee.profile_picture.url }}" alt="Profile Picture" height="150">
     {% endif %}
+
     <p><strong>Status:</strong> {{ employee.get_status_display }}</p>
     <p><strong>Status Changed At:</strong> {{ employee.status_changed_at|date:"Y-m-d H:i" }}</p>
     <br>
@@ -30,10 +29,9 @@
     <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editEmployeeModal">
         Edit Employee
     </button>
-  
-    <br>
-    <a href="{% url 'employee_list' %}">Back to All Employees</a>
+
+    <br><br>
+    <a href="{% url 'employee_list' %}" class="btn btn-secondary">Back to All Employees</a>
 
     {% include 'employees/_edit_employee_modal.html' %}
-</body>
-</html>
+{% endblock %}

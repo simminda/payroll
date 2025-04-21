@@ -1,16 +1,15 @@
-{% load static %}
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Create Employee</title>
-</head>
-<body>
+{% extends "payroll/base.html" %}
+{% block title %}Create Employee{% endblock %}
+
+{% block content %}
     <h1>Create Employee</h1>
+
     <form method="POST" enctype="multipart/form-data">
         {% csrf_token %}
         {{ form.as_p }}
-        <button type="submit">Save</button>
+        <button type="submit" class="btn btn-success">Save</button>
     </form>
-    <a href="{% url 'employee_list' %}">Back to All Employees</a>
-</body>
-</html>
+
+    <br>
+    <a href="{% url 'employee_list' %}" class="btn btn-secondary">Back to All Employees</a>
+{% endblock %}

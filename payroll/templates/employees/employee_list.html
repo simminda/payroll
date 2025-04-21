@@ -1,10 +1,7 @@
-{% load static %}
-<!DOCTYPE html>
-<html>
-<head>
-    <title>All Employees</title>
-</head>
-<body>
+{% extends "payroll/base.html" %}
+{% block title %}All Employees{% endblock %}
+
+{% block content %}
     <h1>Employees</h1>
     <a href="{% url 'create_employee' %}">Add New Employee</a>
     <ul>
@@ -18,5 +15,4 @@
             <li>No employees found.</li>
         {% endfor %}
     </ul>
-</body>
-</html>
+{% endblock %}

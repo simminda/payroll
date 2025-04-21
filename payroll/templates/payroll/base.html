@@ -1,0 +1,72 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Payroll System{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Bootstrap 5 CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'payroll/style.css' %}">
+
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <div class="d-flex flex-column min-vh-100">
+        <!-- Top Thin Navbar -->
+        <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom py-1 px-3" style="font-size: 0.9rem;">
+            <div class="container-fluid justify-content-between">
+                <span class="text-muted">Company Code: <strong>[code]</strong></span>
+                <span class="text-muted">Current Name: <strong>[Company Name]</strong></span>
+                <a href="#" class="text-decoration-none">Change Cycle</a>
+                <span class="text-muted">Active Employees: <strong>228</strong></span>
+                <span class="text-muted">Current Period: <strong>30 Apr 2025</strong></span>
+                <span class="text-muted">User: <strong>{{ request.user.username }}</strong></span>
+            </div>
+        </nav>
+
+        <!-- Main Navigation Bar -->
+        <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+            <div class="container justify-content-center">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <div class="collapse navbar-collapse justify-content-center" id="mainNavbar">
+                    <ul class="navbar-nav d-flex flex-row justify-content-center gap-4">
+                        <li class="nav-item"><a class="nav-link text-white" href="#">Company</a></li>
+                        <li class="nav-item"><a class="nav-link text-white" href="#">Employee</a></li>
+                        <li class="nav-item"><a class="nav-link text-white" href="#">Payroll</a></li>
+                        <li class="nav-item"><a class="nav-link text-white" href="#">Leave</a></li>
+                        <li class="nav-item"><a class="nav-link text-white" href="#">Reports</a></li>
+                        <li class="nav-item"><a class="nav-link text-white" href="#">Data Take On</a></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Page Content -->
+        <main class="container my-4 flex-grow-1">
+            {% block content %}
+            {% endblock %}
+        </main>
+
+        <!-- Sticky Footer -->
+        <footer class="bg-light text-center border-top py-1 px-3" style="font-size: 0.9rem;">
+            <div class="container">
+                <a href="#" class="text-decoration-none text-muted mx-2">© 2025 Payroll by Sim</a> |
+                <a href="#" class="text-decoration-none text-muted mx-2">Terms & Conditions</a> |
+                <a href="#" class="text-decoration-none text-muted mx-2">Contact Us</a>
+            </div>
+        </footer>
+
+        <!-- Bootstrap 5 JS Bundle CDN -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+        {% block extra_js %}{% endblock %}
+    </div>
+</body>
+</html>
