@@ -6,11 +6,12 @@
     <title>{% block title %}Payroll System{% endblock %}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'payroll/style.css' %}">
+
     <!-- Bootstrap 5 CSS CDN -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="{% static 'payroll/style.css' %}">
 
     {% block extra_head %}{% endblock %}
 </head>
@@ -19,12 +20,28 @@
         <!-- Top Thin Navbar -->
         <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom py-1 px-3" style="font-size: 0.9rem;">
             <div class="container-fluid justify-content-between">
-                <span class="text-muted">Company Code: <strong>[code]</strong></span>
-                <span class="text-muted">Current Name: <strong>[Company Name]</strong></span>
+                <span class="text-muted">Company Code: <strong>{{ company.code }}</strong></span>
+                <span class="text-muted">Current Name: <strong>{{ company.name }}</strong></span>
                 <a href="#" class="text-decoration-none">Change Cycle</a>
                 <span class="text-muted">Active Employees: <strong>228</strong></span>
                 <span class="text-muted">Current Period: <strong>30 Apr 2025</strong></span>
-                <span class="text-muted">User: <strong>{{ request.user.username }}</strong></span>
+
+                <!-- User dropdown -->
+                <div class="dropdown">
+                    <a class="text-muted dropdown-toggle text-decoration-none" href="#" role="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    User: <strong>{{ request.user.username }}</strong>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                    <li>
+                        <form method="POST" action="{% url 'logout' %}" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-link">Logout</button>
+                        </form>
+                    </li>
+                    <!-- Optional future links -->
+                    <!-- <li><a class="dropdown-item" href="#">Profile</a></li> -->
+                    </ul>
+                </div>
             </div>
         </nav>
 
@@ -37,8 +54,8 @@
 
                 <div class="collapse navbar-collapse justify-content-center" id="mainNavbar">
                     <ul class="navbar-nav d-flex flex-row justify-content-center gap-4">
-                        <li class="nav-item"><a class="nav-link text-white" href="#">Company</a></li>
-                        <li class="nav-item"><a class="nav-link text-white" href="#">Employee</a></li>
+                        <li class="nav-item"><a class="nav-link text-white" href="{% url 'dashboard' %}">Dashboard</a></li>
+                        <li class="nav-item"><a class="nav-link text-white" href="{% url 'employee_list' %}">Employee</a></li>
                         <li class="nav-item"><a class="nav-link text-white" href="#">Payroll</a></li>
                         <li class="nav-item"><a class="nav-link text-white" href="#">Leave</a></li>
                         <li class="nav-item"><a class="nav-link text-white" href="#">Reports</a></li>

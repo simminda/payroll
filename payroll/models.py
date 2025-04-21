@@ -1,11 +1,27 @@
 from django.db import models
 from decimal import Decimal
 from django.conf import settings
-
-
 from django.db import models
 from django.conf import settings
 from django.utils import timezone
+from django.contrib.auth.models import AbstractUser
+
+
+
+class Company(models.Model):
+    """
+    Represents a company using the payroll system.
+    """
+    code = models.CharField(max_length=7, unique=True)
+    name = models.CharField(max_length=255)
+
+    def __str__(self):
+        return f"{self.name} ({self.code})"
+    
+
+class CustomUser(AbstractUser):
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name="users", null=True, blank=True)
+    
 
 class Employee(models.Model):
     """
@@ -27,6 +43,7 @@ class Employee(models.Model):
     is_wage_employee = models.BooleanField(default=False)
     hourly_rate = models.DecimalField(max_digits=7, decimal_places=2, blank=True, null=True)
     profile_picture = models.ImageField(upload_to='employee_pictures/', blank=True, null=True)
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name="employees", default=1)
     department = models.CharField(max_length=100, blank=True, null=True)
     job_title = models.CharField(max_length=100, blank=True, null=True)
     status = models.CharField(max_length=20, choices=EMPLOYMENT_STATUSES, default='active')
@@ -61,7 +78,6 @@ class Employee(models.Model):
             self.hourly_rate = self.calculate_hourly_rate(config)
 
         super().save(*args, **kwargs)
-
 
 
 class PayrollRun(models.Model):

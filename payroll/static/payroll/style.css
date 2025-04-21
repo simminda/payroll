@@ -1,6 +1,7 @@
 /* Ensure full height layout for sticky footer */
 html, body {
     height: 100%;
+    color:black
 }
 
 body {
@@ -16,22 +17,22 @@ footer {
     flex-shrink: 0;
 }
 
-/* Center navbar links with spacing */
-.navbar-nav.justify-content-center {
-    gap: 1.5rem;
+/* Gradient background for the entire navbar */
+.navbar.bg-primary {
+    background: linear-gradient(to right, #0d6efd, #6e1af7); 
 }
 
-/* Hover effect for main nav links */
-.navbar-nav .nav-item .nav-link {
-    transition: background-color 0.3s ease, color 0.3s ease;
-    padding: 0.5rem 1rem;
-    border-radius: 0.25rem;
+/* Default link style */
+.navbar .nav-link {
+    color: white;
+    transition: color 0.3s ease;
 }
 
-.navbar-nav .nav-item .nav-link:hover {
-    background-color: rgba(255, 255, 255, 0.2);
-    color: #ffffff;
+/* Hover effect for nav links */
+.navbar .nav-link:hover {
+    color: #ffc107 !important;
 }
+
 
 /* Footer links */
 footer a {
