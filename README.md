@@ -80,3 +80,7 @@ Uploaded profile pictures are stored in `media/employee_pictures/`.
 
 ## 📝 License
 [MIT](LICENSE)
+
+
+## 📝 Screenshots
+![employee_list](./screenshots/employee_list.png)

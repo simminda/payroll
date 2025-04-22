@@ -6,6 +6,14 @@ from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from .forms import CompanyLoginForm
 from .forms import CustomUserCreationForm
+from django.core.paginator import Paginator
+from django.db.models import Q
+
+
+VALID_STATUSES = [
+    'active', 'suspended', 'terminated', 'on_leave',
+    'deceased', 'retired', 'maternity_leave', 'probation', 'resigned'
+]
 
 
 @login_required
@@ -20,8 +28,30 @@ def dashboard(request):
 
 
 def employee_list(request):
-    employees = Employee.objects.filter(company=request.user.company, status='active')
-    return render(request, 'employees/employee_list.html', {'employees': employees})
+    query = request.GET.get('q', '')
+    status_filter = request.GET.get('status', '')
+
+    # Base queryset scoped to the user's company
+    employees = Employee.objects.filter(company=request.user.company)
+
+    # Apply search
+    if query:
+        employees = employees.filter(
+            Q(first_name__icontains=query) |
+            Q(last_name__icontains=query) |
+            Q(id_number__icontains=query)
+        )
+
+    if status_filter in VALID_STATUSES:
+        employees = employees.filter(status=status_filter) 
+
+    paginator = Paginator(employees, 10)
+    page_number = request.GET.get("page")
+    employees = paginator.get_page(page_number)
+
+    return render(request, 'employees/employee_list.html', {
+        'employees': employees
+    })
 
 
 def employee_detail(request, pk):

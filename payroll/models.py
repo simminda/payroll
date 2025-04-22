@@ -5,6 +5,7 @@ from django.db import models
 from django.conf import settings
 from django.utils import timezone
 from django.contrib.auth.models import AbstractUser
+from datetime import date
 
 
 
@@ -30,9 +31,14 @@ class Employee(models.Model):
     """
     EMPLOYMENT_STATUSES = [
         ('active', 'Active'),
-        ('terminated', 'Terminated'),
         ('suspended', 'Suspended'),
+        ('terminated', 'Terminated'),
         ('on_leave', 'On Leave'),
+        ('deceased', 'Deceased'),
+        ('retired', 'Retired'),
+        ('maternity_leave', 'Maternity Leave'),
+        ('probation', 'Probation'),
+        ('resigned', 'Resigned'),
     ]
 
     DEPARTMENT_CHOICES = [
@@ -47,6 +53,7 @@ class Employee(models.Model):
 
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
+    date_joined = models.DateField(default=date(2025, 4, 1))
     id_number = models.CharField(max_length=13)
     tax_number = models.CharField(max_length=20, blank=True, null=True)
     salary = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)

@@ -6,14 +6,11 @@ from .models import Employee, Company, CustomUser
 class EmployeeForm(forms.ModelForm):
     class Meta:
         model = Employee
-        fields = [
-            'first_name', 'last_name', 'id_number', 'tax_number',
-            'salary', 'is_wage_employee', 'hourly_rate',
-            'department', 'job_title', 'profile_picture'
-        ]
+        exclude = ['status_changed_at'] 
         widgets = {
             'first_name': forms.TextInput(attrs={'class': 'form-control'}),
             'last_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'date_joined': forms.DateInput(attrs={'type': 'date'}),
             'id_number': forms.TextInput(attrs={'class': 'form-control'}),
             'tax_number': forms.TextInput(attrs={'class': 'form-control'}),
             'salary': forms.NumberInput(attrs={'class': 'form-control'}),

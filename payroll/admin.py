@@ -14,6 +14,6 @@ class WorkingHoursConfigAdmin(admin.ModelAdmin):
 
 
 class EmployeeAdmin(admin.ModelAdmin):
-    list_display = ("first_name", "last_name", "company", "department", "job_title", "status")
+    list_display = ("first_name", "last_name", "company", "department", "job_title", "status", 'date_joined')
     list_filter = ("company", "status", "department")
     search_fields = ("first_name", "last_name", "id_number", "tax_number", "company__name")

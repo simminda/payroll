@@ -1,18 +1,100 @@
 {% extends "payroll/base.html" %}
+{% load static %}
+
 {% block title %}All Employees{% endblock %}
 
 {% block content %}
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
     <h1>Employees</h1>
-    <a href="{% url 'create_employee' %}">Add New Employee</a>
-    <ul>
-        {% for employee in employees %}
-            <li>
-                <a href="{% url 'employee_detail' employee.pk %}">
-                    {{ employee.first_name }} {{ employee.last_name }}
-                </a>
-            </li>
-        {% empty %}
-            <li>No employees found.</li>
-        {% endfor %}
+    <form method="get" class="d-flex align-items-center gap-2 mb-3" role="search">
+        <input type="text" name="q" value="{{ request.GET.q }}" class="form-control" placeholder="Search employee..." />
+        
+        <select name="status" class="form-select">
+            <option value="">All Statuses</option>
+            <option value="active" {% if request.GET.status == "active" %}selected{% endif %}>Active</option>
+            <option value="suspended" {% if request.GET.status == "suspended" %}selected{% endif %}>Suspended</option>
+            <option value="on_leave" {% if request.GET.status == "on_leave" %}selected{% endif %}>On Leave</option>
+            <option value="terminated" {% if request.GET.status == "terminated" %}selected{% endif %}>Terminated</option>
+            <option value="deceased" {% if request.GET.status == "deceased" %}selected{% endif %}>Deceased</option>
+            <option value="retired" {% if request.GET.status == "retired" %}selected{% endif %}>Retired</option>
+            <option value="maternity_leave" {% if request.GET.status == "maternity_leave" %}selected{% endif %}>Maternity Leave</option>
+            <option value="probation" {% if request.GET.status == "probation" %}selected{% endif %}>Probation</option>
+            <option value="resigned" {% if request.GET.status == "resigned" %}selected{% endif %}>Resigned</option>
+          </select>
+        </select>
+      
+        <button type="submit" class="btn btn-outline-primary">Search</button>
+    </form>
+    <a href="{% url 'create_employee' %}" class="btn btn-primary">Add New Employee</a>
+  </div>
+
+  {% if employees %}
+    <div class="table-responsive">
+      <table class="table table-hover align-middle">
+        <thead class="table-light">
+          <tr>
+            <th scope="col">Profile</th>
+            <th scope="col">Full Name</th>
+            <th scope="col">Department</th>
+            <th scope="col">Job Title</th>
+            <th scope="col">Status</th>
+            <th scope="col">Date Joined</th>
+            <th scope="col">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for employee in employees %}
+            <tr>
+              <td>
+                {% if employee.profile_picture %}
+                  <img src="{{ employee.profile_picture.url }}" alt="Profile Picture" style="width: 40px; height: 40px; object-fit: cover;">
+                {% else %}
+                  <img src="{% static 'images/default-avatar.png' %}" alt="No Picture" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;">
+                {% endif %}
+              </td>
+              <td>{{ employee.first_name }} {{ employee.last_name }}</td>
+              <td>{{ employee.department }}</td>
+              <td>{{ employee.job_title|default:"—" }}</td>
+              <td>{{ employee.get_status_display }}</td>
+              <td>{{ employee.date_joined|date:"Y-m-d" }}</td>
+              <td>
+                <a href="{% url 'employee_detail' employee.pk %}" class="btn btn-sm btn-outline-info">View</a>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p>No employees found.</p>
+  {% endif %}
+</div>
+
+<!-- Pagination Controls -->
+<nav>
+    <ul class="pagination justify-content-center">
+        {% if employees.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?page=1">&laquo; First</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ employees.previous_page_number }}">Previous</a>
+        </li>
+        {% endif %}
+
+        <li class="page-item disabled">
+            <span class="page-link">Page {{ employees.number }} of {{employees.paginator.num_pages}}</span>
+        </li>
+
+        {% if employees.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ employees.next_page_number }}">Next</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ employees.paginator.num_pages }}">Last &raquo;</a>
+        </li>
+        {% endif %}
     </ul>
+</nav>
 {% endblock %}
