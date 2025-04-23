@@ -1,5 +1,5 @@
 from decimal import Decimal, ROUND_HALF_UP
-from .models import ContributionType  
+from .models import ContributionType, TaxBracket 
 
 
 def calculate_contribution(contribution_type, gross_income):
@@ -36,3 +36,11 @@ def calculate_contribution(contribution_type, gross_income):
     employer_amount = employer_amount.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
     return employee_amount, employer_amount
+
+
+def calculate_tax(income, tax_year):
+    brackets = TaxBracket.objects.filter(tax_year=tax_year).order_by('lower_limit')
+    for bracket in brackets:
+        if bracket.upper_limit is None or income <= bracket.upper_limit:
+            return bracket.base_tax + ((income - bracket.lower_limit) * (bracket.marginal_rate / 100))
+    return 0

@@ -161,6 +161,9 @@ class Payslip(models.Model):
     class Meta:
         unique_together = ('employee', 'payroll_run')
 
+    def __str__(self):
+        return f"{self.employee.first_name} {self.employee.last_name} – {self.payroll_run.period_start.strftime('%b %Y')}"
+
 
 class AllowanceType(models.Model):
     """
@@ -272,3 +275,17 @@ class WorkingHoursConfig(models.Model):
     class Meta:
         verbose_name = "Working Hours Configuration"
         verbose_name_plural = "Working Hours Configurations"
+
+
+class TaxBracket(models.Model):
+    tax_year = models.CharField(max_length=9)  # e.g., "2024/2025"
+    lower_limit = models.DecimalField(max_digits=12, decimal_places=2)
+    upper_limit = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    base_tax = models.DecimalField(max_digits=12, decimal_places=2)
+    marginal_rate = models.DecimalField(max_digits=5, decimal_places=2, help_text="Enter as a percentage, e.g., 18 for 18%")
+
+    class Meta:
+        ordering = ['tax_year', 'lower_limit']
+
+    def __str__(self):
+        return f"{self.tax_year}: {self.lower_limit} - {self.upper_limit or '∞'}"

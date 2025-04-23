@@ -1,11 +1,12 @@
 from django.contrib import admin
-from .models import CustomUser, Employee, PayrollRun, Payslip, WorkingHoursConfig, Company
+from .models import CustomUser, Employee, PayrollRun, Payslip, WorkingHoursConfig, Company, TaxBracket
 
 admin.site.register(CustomUser)
 admin.site.register(Company)
 admin.site.register(Employee)
 admin.site.register(PayrollRun)
 admin.site.register(Payslip)
+admin.site.register(TaxBracket)
 
 @admin.register(WorkingHoursConfig)
 class WorkingHoursConfigAdmin(admin.ModelAdmin):

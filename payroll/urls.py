@@ -2,7 +2,7 @@ from django.conf import settings
 from django.shortcuts import render
 from django.urls import path
 from django.conf.urls.static import static
-from .views import dashboard, create_employee, employee_list, employee_detail, edit_employee, custom_login_view, register
+from .views import dashboard, create_employee, employee_list, employee_detail, edit_employee, custom_login_view, register, payslip_detail, payslips_summary
 from django.contrib.auth.views import LogoutView
 
 
@@ -15,6 +15,8 @@ urlpatterns = [
     path('login/', custom_login_view, name='login'),
     path('register/', register, name='register'),
     path('logout/', LogoutView.as_view(next_page='login'), name='logout'),
+    path("payslips/summary/", payslips_summary, name="payslips_summary"),
+    path('payslip/', payslip_detail, name='payslip_detail'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 

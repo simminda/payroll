@@ -1,0 +1,43 @@
+{% extends "payroll/base.html" %}
+{% load humanize %}
+
+{% block title %}Payslip - {{ payslip.employee.first_name }} {{ payslip.employee.last_name }}{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm mx-auto" style="max-width: 720px;">
+    <div class="card-header bg-primary text-white text-center">
+        <h4 class="mb-0">Employee Payslip</h4>
+        <small>{{ payslip.created_at|date:"d M Y, H:i" }}</small>
+    </div>
+    <div class="card-body">
+        <h5 class="text-muted mb-3">Payroll Period: {{ payslip.payroll_run.period }}</h5>
+
+        <div class="mb-3">
+            <h6 class="fw-bold">Employee Information</h6>
+            <p class="mb-1"><strong>Name:</strong> {{ payslip.employee.first_name }} {{ payslip.employee.last_name }}</p>
+            <p class="mb-1"><strong>Employee ID:</strong> {{ payslip.employee.id }}</p>
+        </div>
+
+        <hr>
+
+        <div class="mb-3">
+            <h6 class="fw-bold">Earnings</h6>
+            <p><strong>Gross Income:</strong> R{{ payslip.gross_income|floatformat:2|intcomma }}</p>
+        </div>
+
+        <div class="mb-3">
+            <h6 class="fw-bold">Deductions</h6>
+            <p><strong>Tax (PAYE):</strong> R{{ payslip.tax|floatformat:2|intcomma }}</p>
+            <p><strong>UIF:</strong> R{{ payslip.uif|floatformat:2|intcomma }}</p>
+            <p><strong>SDL:</strong> R{{ payslip.sdl|floatformat:2|intcomma }}</p>
+        </div>
+
+        <hr>
+
+        <div class="mb-3">
+            <h6 class="fw-bold">Net Pay</h6>
+            <p class="fs-5"><strong>Total Paid:</strong> R{{ payslip.net_pay|floatformat:2|intcomma }}</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,42 @@
+{% extends 'payroll/base.html' %} {% load humanize %}
+
+{% block title %}Payslip Summary{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Payslip Summary for {{ payroll_run.period_start|date:"F Y" }}</h2>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Employee</th>
+            <th>Gross Income</th>
+            <th>Tax</th>
+            <th>UIF</th>
+            <th>SDL</th>
+            <th>Net Pay</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for payslip in payslips %}
+        <tr>
+            <td>{{ payslip.employee.first_name }} {{ payslip.employee.last_name }}</td>
+            <td>R{{ payslip.gross_income }}</td>
+            <td>R{{ payslip.tax }}</td>
+            <td>R{{ payslip.uif }}</td>
+            <td>R{{ payslip.sdl }}</td>
+            <td>R{{ payslip.net_pay }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+    <tfoot class="table-light fw-bold">
+        <tr>
+            <td>Total</td>
+            <td>R{{ totals.gross_income }}</td>
+            <td>R{{ totals.tax }}</td>
+            <td>R{{ totals.uif }}</td>
+            <td>R{{ totals.sdl }}</td>
+            <td>R{{ totals.net_pay }}</td>
+        </tr>
+    </tfoot>
+</table>
+{% endblock %}
