@@ -155,20 +155,37 @@ class WorkedHours(models.Model):
     saturday_hours = models.DecimalField(max_digits=5, decimal_places=2, default=0)
     sunday_public_hours = models.DecimalField(max_digits=5, decimal_places=2, default=0)
 
-    def calculate_gross_pay(self):
-        """
-        Calculates gross pay based on hours worked and applicable hourly rates.
-        """
-        if not self.employee.is_wage_employee:
-            return self.employee.salary or 0
+    @property
+    def normal_earnings(self):
+        return self.normal_hours * self.employee.hourly_rate
 
-        rate = self.employee.hourly_rate or 0
-        return (
-            self.normal_hours * rate +
-            self.overtime_hours * rate * 1.5 +
-            self.saturday_hours * rate * 1.5 +
-            self.sunday_public_hours * rate * 2
+    @property
+    def overtime_earnings(self):
+        return self.overtime_hours * self.employee.hourly_rate * Decimal("1.5")
+
+    @property
+    def saturday_earnings(self):
+        return self.saturday_hours * self.employee.hourly_rate * Decimal("1.5")
+
+    @property
+    def sunday_earnings(self):
+        return self.sunday_public_hours * self.employee.hourly_rate * Decimal("2")
+
+    def calculate_gross_pay(self):
+        normal = self.normal_hours or 0
+        ot_1_5 = self.overtime_hours or 0
+        sat_1_5 = self.saturday_hours or 0
+        sun_2_0 = self.sunday_public_hours or 0
+
+        hourly = self.employee.hourly_rate or Decimal("0.00")
+
+        gross = (
+            Decimal(normal) * hourly +
+            Decimal(ot_1_5) * hourly * Decimal("1.5") +
+            Decimal(sat_1_5) * hourly * Decimal("1.5") +
+            Decimal(sun_2_0) * hourly * Decimal("2.0")
         )
+        return gross
 
 
 class Payslip(models.Model):
@@ -178,18 +195,41 @@ class Payslip(models.Model):
     """
     employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
     payroll_run = models.ForeignKey(PayrollRun, on_delete=models.CASCADE)
-    gross_income = models.DecimalField(max_digits=10, decimal_places=2)
+    gross_income = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    basic_salary = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     tax = models.DecimalField(max_digits=10, decimal_places=2)
     uif = models.DecimalField(max_digits=10, decimal_places=2)
     sdl = models.DecimalField(max_digits=10, decimal_places=2)
     net_pay = models.DecimalField(max_digits=10, decimal_places=2)
     created_at = models.DateTimeField(auto_now_add=True)
+    worked_hours = models.OneToOneField(
+        'WorkedHours',
+        null=True, blank=True,
+        on_delete=models.SET_NULL
+    )
 
     class Meta:
         unique_together = ('employee', 'payroll_run')
 
     def __str__(self):
         return f"{self.employee.first_name} {self.employee.last_name} – {self.payroll_run.period_start.strftime('%b %Y')}"
+
+    def save(self, *args, **kwargs):
+        if self.employee.is_wage_employee:
+            try:
+                hours = WorkedHours.objects.get(employee=self.employee, payroll_run=self.payroll_run)
+                self.worked_hours = hours
+                self.gross_income = hours.calculate_gross_pay()
+            except WorkedHours.DoesNotExist:
+                self.worked_hours = None
+                self.gross_income = 0
+            self.basic_salary = None  # Optional but good for clarity
+        else:
+            self.worked_hours = None  # No worked hours for salaried employees
+            self.gross_income = self.basic_salary or 0
+
+        super().save(*args, **kwargs)
+
 
 
 class AllowanceType(models.Model):

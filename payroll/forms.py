@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
-from .models import Employee, Company, CustomUser
+from .models import Employee, Company, CustomUser, Payslip, WorkedHours
 
 
 class EmployeeForm(forms.ModelForm):
@@ -65,3 +65,12 @@ class CustomUserCreationForm(UserCreationForm):
                     field.widget.attrs['class'] = 'form-control'
 
 
+class PayslipForm(forms.ModelForm):
+    class Meta:
+        model = Payslip
+        fields = ['basic_salary', 'tax', 'uif', 'net_pay']  
+
+class WorkedHoursForm(forms.ModelForm):
+    class Meta:
+        model = WorkedHours
+        fields = ['normal_hours', 'overtime_hours', 'saturday_hours', 'sunday_public_hours']

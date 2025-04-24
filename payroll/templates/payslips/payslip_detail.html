@@ -4,40 +4,240 @@
 {% block title %}Payslip - {{ payslip.employee.first_name }} {{ payslip.employee.last_name }}{% endblock %}
 
 {% block content %}
-<div class="card shadow-sm mx-auto" style="max-width: 720px;">
-    <div class="card-header bg-primary text-white text-center">
-        <h4 class="mb-0">Employee Payslip</h4>
-        <small>{{ payslip.created_at|date:"d M Y, H:i" }}</small>
+<div class="container mt-4 mb-4">
+    <div class="card shadow-sm mx-auto" style="max-width: 800px;">
+        <!-- Company Header -->
+        <div class="card-header bg-primary text-white">
+            <div class="row">
+                <div class="col-8">
+                    <h3 class="mb-0">{{ company.name|default:"HyperionDev" }}</h3>
+                    <p class="mb-0">{{ company.address_line1|default:"6 Cotswold Drive" }}</p>
+                    <p class="mb-0">{{ company.address_line2|default:"Westville" }}</p>
+                    <p class="mb-0">{{ company.city|default:"Durban" }}</p>
+                    <p class="mb-0">{{ company.postal_code|default:"3630" }}</p>
+                </div>
+                <div class="col-4 text-end">
+                    <h4 class="mb-0">PAYSLIP</h4>
+                    <p class="mb-0">Period: {{ payslip.payroll_run.start_date|date:"Y-m-d" }} to {{ payslip.payroll_run.end_date|date:"Y-m-d" }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body">
+            <!-- Employee Information -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <h5 class="fw-bold border-bottom pb-2">Employee Details</h5>
+                    <p class="mb-1"><strong>Name:</strong> {{ payslip.employee.last_name }}, {{ payslip.employee.first_name }}</p>
+                    <p class="mb-1"><strong>ID Number:</strong> {{ payslip.employee.id_number }}</p>
+                    <p class="mb-1"><strong>Employee Number:</strong> {{ payslip.employee.employee_number }}</p>
+                    <p class="mb-1"><strong>Job Title:</strong> {{ payslip.employee.job_title }}</p>
+                </div>
+                <div class="col-md-6">
+                    <h5 class="invisible">Spacing</h5>
+                    <p class="mb-1"><strong>Income Tax Number:</strong> {{ payslip.employee.tax_number }}</p>
+                    <p class="mb-1"><strong>Employment Date:</strong> {{ payslip.employee.date_joined|date:"d M Y" }}</p>
+                </div>
+            </div>
+
+            <!-- Earnings Section -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h5 class="fw-bold border-bottom pb-2">Income</h5>
+                </div>
+                <div class="col-12">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th></th>
+                                    <th class="text-end">Current</th>
+                                    <th class="text-end">YTD</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Basic Salary</td>
+                                    <td class="text-end">R{{ payslip.employee.salary|default:0.00|floatformat:2|intcomma }}</td>
+                                    <td class="text-end">R{{ payslip.ytd_basic_salary|default:0.00|floatformat:2|intcomma }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Wages</td>
+                                    <td class="text-end">R{{ payslip.hourly_pay|default:"121.15"|floatformat:2|intcomma }}</td>
+                                    <td class="text-end">R{{ payslip.ytd_hourly_pay|default:""|floatformat:2|intcomma }}</td>
+                                </tr>
+                                <tr class="table-secondary">
+                                    <td><strong>Gross Earnings</strong></td>
+                                    <td class="text-end"><strong>R{{ payslip.basic_salary|default:"11871.15"|floatformat:2|intcomma }}</strong></td>
+                                    <td class="text-end"><strong>R{{ payslip.ytd_basic_salary|default:""|floatformat:2|intcomma }}</strong></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Deductions Section -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h5 class="fw-bold border-bottom pb-2">Deductions</h5>
+                </div>
+                <div class="col-12">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th></th>
+                                    <th class="text-end">Current</th>
+                                    <th class="text-end">YTD</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>UIF - Employee</td>
+                                    <td class="text-end">R{{ payslip.uif|default:"111.21"|floatformat:2|intcomma }}</td>
+                                    <td class="text-end">R{{ payslip.ytd_uif|default:""|floatformat:2|intcomma }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Tax (PAYE)</td>
+                                    <td class="text-end">R{{ payslip.tax|default:"700.56"|floatformat:2|intcomma }}</td>
+                                    <td class="text-end">R{{ payslip.ytd_tax|default:""|floatformat:2|intcomma }}</td>
+                                </tr>
+                                <tr class="table-secondary">
+                                    <td><strong>Total Deductions</strong></td>
+                                    <td class="text-end"><strong>R{{ payslip.total_deductions|default:"0.00"|floatformat:2|intcomma }}</strong></td>
+                                    <td class="text-end"><strong>R{{ payslip.ytd_total_deductions|default:""|floatformat:2|intcomma }}</strong></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Net Pay -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered">
+                            <tbody>
+                                <tr class="table-primary">
+                                    <td><strong>Net Pay</strong></td>
+                                    <td class="text-end"><strong>R{{ payslip.net_pay|default:"11059.38"|floatformat:2|intcomma }}</strong></td>
+                                    <td class="text-end"><strong>R{{ payslip.ytd_net_pay|default:""|floatformat:2|intcomma }}</strong></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Employer Contributions -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h5 class="fw-bold border-bottom pb-2">Employer Contributions</h5>
+                </div>
+                <div class="col-12">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th></th>
+                                    <th class="text-end">Current</th>
+                                    <th class="text-end">YTD</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>SDL - Employer</td>
+                                    <td class="text-end">R{{ payslip.sdl|default:"0.00"|floatformat:2|intcomma }}</td>
+                                    <td class="text-end">R{{ payslip.ytd_sdl|default:"0.00"|floatformat:2|intcomma }}</td>
+                                </tr>
+                                <tr>
+                                    <td>UIF - Employer</td>
+                                    <td class="text-end">R{{ payslip.uif|default:"0.00"|floatformat:2|intcomma }}</td>
+                                    <td class="text-end">R{{ payslip.ytd_employer_uif|default:"0.00"|floatformat:2|intcomma }}</td>
+                                </tr>
+                                <tr class="table-secondary">
+                                    <td><strong>Total Employer Contributions</strong></td>
+                                    <td class="text-end"><strong>R{{ payslip.total_employer_contribution|default:"0.00"|floatformat:2|intcomma }}</strong></td>
+                                    <td class="text-end"><strong>R{{ payslip.ytd_total_employer_contribution|default:"0.00"|floatformat:2|intcomma }}</strong></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rates & Quantities -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h5 class="fw-bold border-bottom pb-2">Rates & Quantities</h5>
+                </div>
+                <div class="col-6">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Type</th>
+                                    <th class="text-end">Quantity</th>
+                                    <th class="text-end">Rate</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Normal</td>
+                                    <td class="text-end">{{ payslip.normal_hours|default:"0.0" }}</td>
+                                    <td class="text-end">R{{ payslip.normal_rate|default:"0.0"|floatformat:2 }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Overtime</td>
+                                    <td class="text-end">{{ payslip.overtime_hours|default:"0.0" }}</td>
+                                    <td class="text-end">R{{ payslip.normal_rate|default:"0.0"|floatformat:2 }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Saturday</td>
+                                    <td class="text-end">{{ payslip.saturday_hours|default:"0.0" }}</td>
+                                    <td class="text-end">R{{ payslip.normal_rate|default:"0.0"|floatformat:2 }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Sunday/Public Holiday</td>
+                                    <td class="text-end">{{ payslip.overtime_hours|default:"0.0" }}</td>
+                                    <td class="text-end">R{{ payslip.normal_rate|default:"0.0"|floatformat:2 }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Banking Details -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <h5 class="fw-bold border-bottom pb-2">Employee Banking Details</h5>
+                    <p class="mb-1"><strong>Account number:</strong> {{ payslip.employee.account_number|default:"12345678" }}</p>
+                    <p class="mb-1"><strong>Branch code:</strong> {{ payslip.employee.branch_code|default:"00000" }}</p>
+                    <p class="mb-1"><strong>Account type:</strong> {{ payslip.employee.account_type|default:"Current (Cheque)" }}</p>
+                    <p class="mb-1"><strong>Bank:</strong> {{ payslip.employee.bank|default:"Bank" }}</p>
+                </div>
+                <div class="col-md-6">
+                    <h5 class="fw-bold border-bottom pb-2">Employee Address</h5>
+                    <p class="mb-1">{{ payslip.employee.address_line1|default:"Line 1" }}</p>
+                    <p class="mb-1">{{ payslip.employee.address_line2|default:"Line 2" }}</p>
+                    <p class="mb-1">{{ payslip.employee.address_line3|default:"Suburb" }}</p>
+                    <p class="mb-1">{{ payslip.employee.city|default:"City" }}</p>
+                    <p class="mb-1">{{ payslip.employee.postal_code|default:"Post Code" }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-footer bg-light text-center">
+            <small class="text-muted">Generated on {{ payslip.created_at|date:"d M Y, H:i" }}</small>
+        </div>
     </div>
-    <div class="card-body">
-        <h5 class="text-muted mb-3">Payroll Period: {{ payslip.payroll_run.period }}</h5>
 
-        <div class="mb-3">
-            <h6 class="fw-bold">Employee Information</h6>
-            <p class="mb-1"><strong>Name:</strong> {{ payslip.employee.first_name }} {{ payslip.employee.last_name }}</p>
-            <p class="mb-1"><strong>Employee ID:</strong> {{ payslip.employee.id }}</p>
-        </div>
-
-        <hr>
-
-        <div class="mb-3">
-            <h6 class="fw-bold">Earnings</h6>
-            <p><strong>Gross Income:</strong> R{{ payslip.gross_income|floatformat:2|intcomma }}</p>
-        </div>
-
-        <div class="mb-3">
-            <h6 class="fw-bold">Deductions</h6>
-            <p><strong>Tax (PAYE):</strong> R{{ payslip.tax|floatformat:2|intcomma }}</p>
-            <p><strong>UIF:</strong> R{{ payslip.uif|floatformat:2|intcomma }}</p>
-            <p><strong>SDL:</strong> R{{ payslip.sdl|floatformat:2|intcomma }}</p>
-        </div>
-
-        <hr>
-
-        <div class="mb-3">
-            <h6 class="fw-bold">Net Pay</h6>
-            <p class="fs-5"><strong>Total Paid:</strong> R{{ payslip.net_pay|floatformat:2|intcomma }}</p>
-        </div>
+    <div class="text-center mt-3">
+        <a href="{% url 'payslips_summary' %}" class="btn btn-secondary me-2">Back to Summary</a>
+        <a href="#" onclick="window.print()" class="btn btn-primary">Print Payslip</a>
     </div>
 </div>
 {% endblock %}

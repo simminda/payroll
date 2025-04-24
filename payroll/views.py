@@ -7,7 +7,7 @@ from .models import Employee, Company, Payslip, PayrollRun, WorkedHours
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from .forms import CompanyLoginForm
-from .forms import CustomUserCreationForm
+from .forms import CustomUserCreationForm, PayslipForm, WorkedHoursForm
 from django.core.paginator import Paginator
 from django.db.models import Q, Sum
 import datetime
@@ -136,8 +136,18 @@ def get_month_bounds(dt):
     return start, end
 
 def payslips_summary(request):
+    query = request.GET.get('q', '')
+
     # Step 1: Get active employees
     active_employees = Employee.objects.filter(status="active")
+
+    # Apply search
+    if query:
+        active_employees = active_employees.filter(
+            Q(first_name__icontains=query) |
+            Q(last_name__icontains=query) |
+            Q(id_number__icontains=query)
+        )
 
     # Step 2: Define payroll period (start of current month to end of current month)
     today = timezone.now().date()
@@ -172,7 +182,7 @@ def payslips_summary(request):
             employee=employee,
             payroll_run__period_start__gte=start_of_tax_year,
             payroll_run__period_start__lt=period_start
-        ).aggregate(total=Sum('gross_income'))['total'] or Decimal('0.00')
+        ).aggregate(total=Sum('basic_salary'))['total'] or Decimal('0.00')
         
         months_paid = Payslip.objects.filter(
             employee=employee,
@@ -223,26 +233,34 @@ def payslips_summary(request):
         
         # If the payslip already existed, update its values
         if not created:
-            payslip.gross_income = gross_income
+            payslip.basic_salary = gross_income
             payslip.tax = tax
             payslip.uif = uif
             payslip.sdl = sdl
             payslip.net_pay = net_pay
             payslip.save()
 
+        # Get worked hours for the employee and payroll run
+        worked_hours = WorkedHours.objects.filter(
+            employee=employee, payroll_run=payroll_run
+        ).first()
+        
+        # Store worked hours in a dictionary tied to payslip ID for easy access in template
+        payslip.worked_hours = worked_hours
+
     # Step 5: Retrieve all payslips for the current payroll run
-    payslips = Payslip.objects.filter(payroll_run=payroll_run)
+    payslips = Payslip.objects.filter(payroll_run=payroll_run, employee__in=active_employees)
 
     # Step 6: Calculate totals
     totals = {
-        'gross_income': sum(p.gross_income for p in payslips),
+        'basic_salary_total': sum(p.basic_salary or 0 for p in payslips if p.basic_salary is not None),
+        'gross_income': sum(p.gross_income or 0 for p in payslips),
         'tax': sum(p.tax for p in payslips),
         'uif': sum(p.uif for p in payslips),
-        'sdl': sum(p.sdl for p in payslips),
         'net_pay': sum(p.net_pay for p in payslips),
     }
 
-    paginator = Paginator(payslips, 15)
+    paginator = Paginator(payslips, 10)
     page_number = request.GET.get("page")
     payslips = paginator.get_page(page_number)
 
@@ -250,9 +268,35 @@ def payslips_summary(request):
         'payslips': payslips,
         'totals': totals,
         'payroll_run': payroll_run,
+        'query': query,
+        'worked_hours': worked_hours
     })
 
 
 def payslip_detail(request, pk):
     payslip = get_object_or_404(Payslip, pk=pk)
     return render(request, 'payslips/payslip_detail.html', {'payslip': payslip})
+
+
+def update_payslip(request, payslip_id):
+    payslip = get_object_or_404(Payslip, id=payslip_id)
+    
+    # Try to get WorkedHours if it exists
+    worked_hours = WorkedHours.objects.filter(
+        employee=payslip.employee, payroll_run=payslip.payroll_run
+    ).first()
+
+    if request.method == 'POST':
+        payslip_form = PayslipForm(request.POST, instance=payslip)
+        hours_form = WorkedHoursForm(request.POST, instance=worked_hours)
+
+        if payslip_form.is_valid() and hours_form.is_valid():
+            payslip_form.save()
+            hours_form.save()
+            return redirect('payslips_summary')
+        
+    else:
+        payslip_form = PayslipForm(instance=payslip)
+        hours_form = WorkedHoursForm(instance=worked_hours)
+
+    return redirect('payslips_summary')

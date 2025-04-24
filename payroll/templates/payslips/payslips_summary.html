@@ -5,37 +5,73 @@
 {% block content %}
 <h2 class="mb-4">Payslip Summary for {{ payroll_run.period_start|date:"F Y" }}</h2>
 
+<form method="get" class="d-flex align-items-center gap-2 mb-3" >
+    <div style="margin: auto; width: 500px; display: flex;">
+        <input type="text" name="q" value="{{ query }}" class="form-control" placeholder="Search name or ID number">
+        &nbsp;
+        <button type="submit" class="btn btn-outline-primary">Search</button>
+    </div>
+</form>
+
 <table class="table table-striped">
     <thead>
         <tr>
             <th>Employee</th>
-            <th>Gross Income</th>
-            <th>Tax</th>
+            <th>Basic</th>
+            <th>NT</th>
+            <th>OT 1.5</th>
+            <th>Sat 1.5</th>
+            <th>OT 2.0</th>
+            <th>Income</th>
+            <th>PAYE</th>
             <th>UIF</th>
-            <th>SDL</th>
+            <th>Deductions</th>
             <th>Net Pay</th>
+            <th>Actions</th>
         </tr>
     </thead>
     <tbody>
         {% for payslip in payslips %}
         <tr>
             <td>{{ payslip.employee.first_name }} {{ payslip.employee.last_name }}</td>
-            <td>R{{ payslip.gross_income|floatformat:2|intcomma }}</td>
+            <td>{% if payslip.basic_salary %}R{{ payslip.basic_salary|floatformat:2|intcomma }}{% else %}R0.00{% endif %}</td>
+            <td>{% if payslip.worked_hours.normal_earnings %}R{{ payslip.worked_hours.normal_earnings|floatformat:2|intcomma }}{% else %}R0.00{% endif %}</td>
+            <td>{% if payslip.worked_hours.overtime_earnings %}R{{ payslip.worked_hours.overtime_earnings|floatformat:2|intcomma }}{% else %}R0.00{% endif %}</td>
+            <td>{% if payslip.worked_hours.saturday_earnings %}R{{ payslip.worked_hours.saturday_earnings|floatformat:2|intcomma }}{% else %}R0.00{% endif %}</td>
+            <td>{% if payslip.worked_hours.sunday_earnings %}R{{ payslip.worked_hours.sunday_earnings|floatformat:2|intcomma }}{% else %}R0.00{% endif %}</td>
+            <td></td>
             <td>R{{ payslip.tax|floatformat:2|intcomma }}</td>
             <td>R{{ payslip.uif|floatformat:2|intcomma }}</td>
-            <td>R{{ payslip.sdl|floatformat:2|intcomma }}</td>
+            <td>R{{ payslip.tbc|default:"0.00"|floatformat:2|intcomma }}</td>
             <td>R{{ payslip.net_pay|floatformat:2|intcomma }}</td>
+            <td>
+                <!-- Button to trigger the modal -->
+                <button type="button"
+                        class="btn btn-sm btn-outline-warning"
+                        data-bs-toggle="modal"
+                        data-bs-target="#editPayslipModal-{{ payslip.id }}">
+                    Edit
+                </button>
+                <a href="{% url 'payslip_detail' payslip.id %}" class="btn btn-sm btn-outline-info">View</a>
+            </td>
         </tr>
+        <!-- Modal for editing payslip -->
+        {% include 'payslips/_edit_payslip_modal.html' with payslip=payslip hours=payslip.worked_hours %}
         {% endfor %}
     </tbody>
     <tfoot class="table-light fw-bold">
         <tr>
             <td>Total</td>
-            <td>R{{ totals.gross_income|floatformat:2|intcomma }}</td>
+            <td>R{{ totals.basic_salary|floatformat:2|intcomma }}</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
             <td>R{{ totals.tax|floatformat:2|intcomma }}</td>
             <td>R{{ totals.uif|floatformat:2|intcomma }}</td>
-            <td>R{{ totals.sdl|floatformat:2|intcomma }}</td>
+            <td></td>
             <td>R{{ totals.net_pay|floatformat:2|intcomma }}</td>
+            <td></td>
         </tr>
     </tfoot>
 </table>
@@ -66,4 +102,5 @@
         {% endif %}
     </ul>
 </nav>
+
 {% endblock %}
