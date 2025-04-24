@@ -66,6 +66,33 @@ class Employee(models.Model):
     status = models.CharField(max_length=20, choices=EMPLOYMENT_STATUSES, default='active')
     status_changed_at = models.DateTimeField(null=True, blank=True)
 
+    @property
+    def birthdate(self):
+        """
+        Extracts birthdate from the South African ID number (YYMMDD format).
+        Assumes all IDs are valid and for individuals born in the 1900s or 2000s.
+        """
+        if self.id_number and len(self.id_number) == 13:
+            yy = int(self.id_number[:2])
+            mm = int(self.id_number[2:4])
+            dd = int(self.id_number[4:6])
+
+            # Determine the century
+            current_year = date.today().year % 100
+            century = 1900 if yy > current_year else 2000
+            try:
+                return date(century + yy, mm, dd)
+            except ValueError:
+                return None
+        return None
+
+    @property
+    def age(self):
+        if self.birthdate:
+            today = date.today()
+            return today.year - self.birthdate.year - ((today.month, today.day) < (self.birthdate.month, self.birthdate.day))
+        return None
+
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
 

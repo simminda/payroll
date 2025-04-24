@@ -38,9 +38,11 @@ def calculate_contribution(contribution_type, gross_income):
     return employee_amount, employer_amount
 
 
-def calculate_tax(income, tax_year):
+def calculate_tax(income, tax_year, rebate=Decimal('0.00')):
     brackets = TaxBracket.objects.filter(tax_year=tax_year).order_by('lower_limit')
     for bracket in brackets:
         if bracket.upper_limit is None or income <= bracket.upper_limit:
-            return bracket.base_tax + ((income - bracket.lower_limit) * (bracket.marginal_rate / 100))
-    return 0
+            tax_before_rebate = bracket.base_tax + ((income - bracket.lower_limit) * (bracket.marginal_rate / 100))
+            tax_after_rebate = max(tax_before_rebate - rebate, Decimal('0.00'))
+            return tax_after_rebate
+    return Decimal('0.00')

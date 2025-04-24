@@ -185,9 +185,18 @@ def payslips_summary(request):
             annualized_income = gross_income * 12
         else:
             annualized_income = (ytd_income + gross_income) / months_paid * 12
-        
-        # Tax based on annualized income
-        tax = calculate_tax(annualized_income, CURRENT_TAX_YEAR) / 12
+
+        # Determine the rebate based on age
+        age = employee.age or 0
+        rebate = Decimal('17235.00')  # Base rebate
+        if age >= 65:
+            rebate += Decimal('9444.00')
+        if age >= 75:
+            rebate += Decimal('3145.00')
+
+        # Calculate tax based on annualized income minus applicable rebate
+        annual_tax = calculate_tax(annualized_income, CURRENT_TAX_YEAR, rebate)
+        tax = annual_tax / 12
         
         # UIF
         uif_income = min(gross_income, UIF_CEILING)
@@ -232,6 +241,10 @@ def payslips_summary(request):
         'sdl': sum(p.sdl for p in payslips),
         'net_pay': sum(p.net_pay for p in payslips),
     }
+
+    paginator = Paginator(payslips, 15)
+    page_number = request.GET.get("page")
+    payslips = paginator.get_page(page_number)
 
     return render(request, 'payslips/payslips_summary.html', {
         'payslips': payslips,
