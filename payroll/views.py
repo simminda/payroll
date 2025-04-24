@@ -251,6 +251,13 @@ def payslips_summary(request):
     # Step 5: Retrieve all payslips for the current payroll run
     payslips = Payslip.objects.filter(payroll_run=payroll_run, employee__in=active_employees)
 
+    # Attach WorkedHours to each payslip
+    for payslip in payslips:
+        payslip.worked_hours = WorkedHours.objects.filter(
+            employee=payslip.employee,
+            payroll_run=payslip.payroll_run
+        ).first()
+
     # Step 6: Calculate totals
     totals = {
         'basic_salary_total': sum(p.basic_salary or 0 for p in payslips if p.basic_salary is not None),
@@ -258,6 +265,11 @@ def payslips_summary(request):
         'tax': sum(p.tax for p in payslips),
         'uif': sum(p.uif for p in payslips),
         'net_pay': sum(p.net_pay for p in payslips),
+        # WorkedHours breakdown 
+        'normal_hours_total': sum(p.worked_hours.normal_earnings or 0 for p in payslips if p.worked_hours),
+        'overtime_hours_total': sum(p.worked_hours.overtime_earnings or 0 for p in payslips if p.worked_hours),
+        'saturday_hours_total': sum(p.worked_hours.saturday_earnings or 0 for p in payslips if p.worked_hours),
+        'sunday_hours_total': sum(p.worked_hours.sunday_earnings or 0 for p in payslips if p.worked_hours),
     }
 
     paginator = Paginator(payslips, 10)

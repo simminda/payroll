@@ -62,10 +62,11 @@
     <tfoot class="table-light fw-bold">
         <tr>
             <td>Total</td>
-            <td>R{{ totals.basic_salary|floatformat:2|intcomma }}</td>
-            <td></td>
-            <td></td>
-            <td></td>
+            <td>R{{ totals.basic_salary_total|floatformat:2|intcomma }}</td>
+            <td>R{{ totals.normal_hours_total|floatformat:2|intcomma }}</td>
+            <td>R{{ totals.overtime_hours_total|floatformat:2|intcomma }}</td>
+            <td>R{{ totals.saturday_hours_total|floatformat:2|intcomma }}</td>
+            <td>R{{ totals.sunday_hours_total|floatformat:2|intcomma }}</td>
             <td></td>
             <td>R{{ totals.tax|floatformat:2|intcomma }}</td>
             <td>R{{ totals.uif|floatformat:2|intcomma }}</td>
