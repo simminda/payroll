@@ -20,22 +20,22 @@
         {% for payslip in payslips %}
         <tr>
             <td>{{ payslip.employee.first_name }} {{ payslip.employee.last_name }}</td>
-            <td>R{{ payslip.gross_income }}</td>
-            <td>R{{ payslip.tax }}</td>
-            <td>R{{ payslip.uif }}</td>
-            <td>R{{ payslip.sdl }}</td>
-            <td>R{{ payslip.net_pay }}</td>
+            <td>R{{ payslip.gross_income|floatformat:2|intcomma }}</td>
+            <td>R{{ payslip.tax|floatformat:2|intcomma }}</td>
+            <td>R{{ payslip.uif|floatformat:2|intcomma }}</td>
+            <td>R{{ payslip.sdl|floatformat:2|intcomma }}</td>
+            <td>R{{ payslip.net_pay|floatformat:2|intcomma }}</td>
         </tr>
         {% endfor %}
     </tbody>
     <tfoot class="table-light fw-bold">
         <tr>
             <td>Total</td>
-            <td>R{{ totals.gross_income }}</td>
-            <td>R{{ totals.tax }}</td>
-            <td>R{{ totals.uif }}</td>
-            <td>R{{ totals.sdl }}</td>
-            <td>R{{ totals.net_pay }}</td>
+            <td>R{{ totals.gross_income|floatformat:2|intcomma }}</td>
+            <td>R{{ totals.tax|floatformat:2|intcomma }}</td>
+            <td>R{{ totals.uif|floatformat:2|intcomma }}</td>
+            <td>R{{ totals.sdl|floatformat:2|intcomma }}</td>
+            <td>R{{ totals.net_pay|floatformat:2|intcomma }}</td>
         </tr>
     </tfoot>
 </table>

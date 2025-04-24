@@ -3,14 +3,17 @@ from django.utils import timezone
 from decimal import Decimal
 from django.contrib import messages
 from .forms import EmployeeForm
-from .models import Employee, Company, Payslip, PayrollRun
+from .models import Employee, Company, Payslip, PayrollRun, WorkedHours
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from .forms import CompanyLoginForm
 from .forms import CustomUserCreationForm
 from django.core.paginator import Paginator
 from django.db.models import Q, Sum
+import datetime
 from datetime import date, timedelta
+from payroll.utils import calculate_tax
+
 
 
 VALID_STATUSES = [
@@ -149,17 +152,55 @@ def payslips_summary(request):
     # Step 4: Create missing Payslip objects for each active employee
     UIF_CEILING = Decimal('17712.00')
     UIF_RATE = Decimal('0.01')
+    SDL_RATE = Decimal('0.01')
+    CURRENT_TAX_YEAR = "2024/2025"
 
     for employee in active_employees:
-        gross_income = employee.salary if not employee.is_wage_employee and employee.salary else Decimal('0.00')
-        tax = Decimal('0.00')
-        # Apply UIF ceiling
+        # Calculate all values first
+        if employee.is_wage_employee:
+            try:
+                worked_hours = WorkedHours.objects.get(employee=employee, payroll_run=payroll_run)
+                gross_income = worked_hours.calculate_gross_pay()
+            except WorkedHours.DoesNotExist:
+                gross_income = Decimal('0.00')
+        else:
+            gross_income = employee.salary or Decimal('0.00')
+        
+        # Calculate YTD gross income (excluding this month)
+        start_of_tax_year = datetime.date(today.year, 3, 1)  # SA tax year: March to Feb
+        ytd_income = Payslip.objects.filter(
+            employee=employee,
+            payroll_run__period_start__gte=start_of_tax_year,
+            payroll_run__period_start__lt=period_start
+        ).aggregate(total=Sum('gross_income'))['total'] or Decimal('0.00')
+        
+        months_paid = Payslip.objects.filter(
+            employee=employee,
+            payroll_run__period_start__gte=start_of_tax_year,
+            payroll_run__period_start__lt=period_start
+        ).count() + 1  # Include this month
+        
+        # Avoid division by zero
+        if months_paid == 0:
+            annualized_income = gross_income * 12
+        else:
+            annualized_income = (ytd_income + gross_income) / months_paid * 12
+        
+        # Tax based on annualized income
+        tax = calculate_tax(annualized_income, CURRENT_TAX_YEAR) / 12
+        
+        # UIF
         uif_income = min(gross_income, UIF_CEILING)
         uif = uif_income * UIF_RATE
-        sdl = gross_income * Decimal('0.01')
+        
+        # SDL
+        sdl = gross_income * SDL_RATE
+        
+        # Net pay
         net_pay = gross_income - tax - uif - sdl
-
-        Payslip.objects.get_or_create(
+        
+        # Now use get_or_create with all the values in defaults
+        payslip, created = Payslip.objects.get_or_create(
             employee=employee,
             payroll_run=payroll_run,
             defaults={
@@ -170,6 +211,15 @@ def payslips_summary(request):
                 'net_pay': net_pay,
             }
         )
+        
+        # If the payslip already existed, update its values
+        if not created:
+            payslip.gross_income = gross_income
+            payslip.tax = tax
+            payslip.uif = uif
+            payslip.sdl = sdl
+            payslip.net_pay = net_pay
+            payslip.save()
 
     # Step 5: Retrieve all payslips for the current payroll run
     payslips = Payslip.objects.filter(payroll_run=payroll_run)
