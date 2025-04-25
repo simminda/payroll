@@ -98,4 +98,9 @@ Uploaded profile pictures are stored in `media/employee_pictures/`.
 
 
 ## 📝 Screenshots
+
+### Employee List
 ![employee_list](./screenshots/employee_list.png)
+
+### Payslips Summary
+![payslips_summary](./screenshots/payslips_summary.png)
