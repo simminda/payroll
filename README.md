@@ -56,9 +56,6 @@ A Django-based web application to manage employee records for payroll purposes. 
 - `status_changed_at` timestamp:
   - Automatically updates when employment status changes
 
-### ✅ UX Enhancements
-- Success messages via Django messages framework
-- Smart redirection to relevant views (e.g., detail view after employee creation)
 
 ## 📦 Requirements
 - Django
@@ -71,9 +68,14 @@ Uploaded profile pictures are stored in `media/employee_pictures/`.
 
 ## 🚧 Future Enhancements
 - Audit trail for status changes
-- Search and filter functionality on the employee list
+- Filter functionality over and above search for listings pages
 - Soft delete for terminated employees
 - Role-based access control (e.g., Admin vs HR roles)
+- Employee view screen UI enhancement
+- PDF Download payslips
+- Implement "Change Cycle" on front-end
+- complete content and templates for Dashboard (P0 S+), Leave (P4 M), Reports (P1 M), Data Take On(P2 S)
+- Switch to PostgreSQL
 
 ---
 
