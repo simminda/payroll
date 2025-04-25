@@ -60,20 +60,6 @@ A Django-based web application to manage employee records for payroll purposes. 
 - Success messages via Django messages framework
 - Smart redirection to relevant views (e.g., detail view after employee creation)
 
-## 🖼️ Templates
-- `employee_list.html`: Displays all employees
-- `employee_detail.html`: Shows individual employee details and includes an edit modal
-- `edit_employee_modal.html`: Modal form used for updating employee records
-- `payslip_summary.html`: Displays payslip summary for the payroll run, showing gross income, tax, UIF, SDL, and net pay for each employee
-
-## 🔧 Models Summary
-
-### `Employee`
-- Fields: `first_name`, `last_name`, `id_number`, `tax_number`, `salary`, `is_wage_employee`, `hourly_rate`, `profile_picture`, `department`, `job_title`, `status`, `status_changed_at`
-- Logic:
-  - Auto-calculate hourly rate for salaried employees
-  - Track changes to employment status with timestamp
-
 ## 📦 Requirements
 - Django
 - Bootstrap (for modal support)
@@ -82,8 +68,6 @@ A Django-based web application to manage employee records for payroll purposes. 
 
 ## 📸 Media
 Uploaded profile pictures are stored in `media/employee_pictures/`.
-
-
 
 ## 🚧 Future Enhancements
 - Audit trail for status changes
@@ -105,6 +89,9 @@ Uploaded profile pictures are stored in `media/employee_pictures/`.
 ### Payslips Summary
 ![payslips_summary](./screenshots/payslips_summary.png)
 
-### Payslip (Wage employee) - Pre-YTD logic
+### Payslip (Salary employee) 
 ![payslip1](./screenshots/payslip1.png)
 ![payslip2](./screenshots/payslip2.png)
+
+### Payslip (Wages employee) 
+![payslip1](./screenshots/payslip3.png)

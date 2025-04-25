@@ -232,7 +232,7 @@ def payslips_summary(request):
         
         # Net pay
         net_pay = gross_income - tax - uif - sdl
-        
+
         # Now use get_or_create with all the values in defaults
         payslip, created = Payslip.objects.get_or_create(
             employee=employee,

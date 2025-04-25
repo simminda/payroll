@@ -64,12 +64,12 @@
                                 <tr>
                                     <td>Wages</td>
                                     <td class="text-end">R{{ payslip.get_wages_total|default:"0.00"|floatformat:2|intcomma }}</td>
-                                    <td class="text-end">R{{ payslip.ytd_hourly_pay|default:""|floatformat:2|intcomma }}</td>
+                                    <td class="text-end">R{{ payslip.ytd_wages|default:"0.00"|floatformat:2|intcomma }}</td>
                                 </tr>
                                 <tr class="table-secondary">
                                     <td><strong>Gross Earnings</strong></td>
                                     <td class="text-end"><strong>R{{ payslip.get_income_total|default:"0.00"|floatformat:2|intcomma }}</strong></td>
-                                    <td class="text-end"><strong>R{{ payslip.ytd_basic_salary|default:""|floatformat:2|intcomma }}</strong></td>
+                                    <td class="text-end"><strong>R{{ payslip.ytd_gross_income|default:"0.00"|floatformat:2|intcomma }}</strong></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -95,13 +95,13 @@
                             <tbody>
                                 <tr>
                                     <td>UIF - Employee</td>
-                                    <td class="text-end">R{{ payslip.uif|default:"111.21"|floatformat:2|intcomma }}</td>
-                                    <td class="text-end">R{{ payslip.ytd_uif|default:""|floatformat:2|intcomma }}</td>
+                                    <td class="text-end">R{{ payslip.uif|default:"0.00"|floatformat:2|intcomma }}</td>
+                                    <td class="text-end">R{{ payslip.ytd_uif|default:"0.00"|floatformat:2|intcomma }}</td>
                                 </tr>
                                 <tr>
                                     <td>Tax (PAYE)</td>
-                                    <td class="text-end">R{{ payslip.tax|default:"700.56"|floatformat:2|intcomma }}</td>
-                                    <td class="text-end">R{{ payslip.ytd_tax|default:""|floatformat:2|intcomma }}</td>
+                                    <td class="text-end">R{{ payslip.tax|default:"0.00"|floatformat:2|intcomma }}</td>
+                                    <td class="text-end">R{{ payslip.ytd_tax|default:"0.00"|floatformat:2|intcomma }}</td>
                                 </tr>
                                 <tr class="table-secondary">
                                     <td><strong>Total Deductions</strong></td>
@@ -155,7 +155,7 @@
                                 <tr>
                                     <td>UIF - Employer</td>
                                     <td class="text-end">R{{ payslip.uif|default:"0.00"|floatformat:2|intcomma }}</td>
-                                    <td class="text-end">R{{ payslip.ytd_employer_uif|default:"0.00"|floatformat:2|intcomma }}</td>
+                                    <td class="text-end">R{{ payslip.ytd_uif|default:"0.00"|floatformat:2|intcomma }}</td>
                                 </tr>
                                 <tr class="table-secondary">
                                     <td><strong>Total Employer Contributions</strong></td>

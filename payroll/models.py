@@ -6,7 +6,10 @@ from django.conf import settings
 from django.utils import timezone
 from django.contrib.auth.models import AbstractUser
 from datetime import date
+from django.db.models import Sum
 
+
+import datetime
 
 
 class Company(models.Model):
@@ -235,6 +238,106 @@ class Payslip(models.Model):
             (wh.saturday_earnings if wh else 0) +
             (wh.sunday_earnings if wh else 0)
         )
+    
+    @property
+    def ytd_basic_salary(self):
+        if not self.employee.is_wage_employee:
+            start = datetime.date(self.payroll_run.period_start.year, 3, 1)
+            return Payslip.objects.filter(
+                employee=self.employee,
+                payroll_run__period_start__gte=start,
+                payroll_run__period_start__lte=self.payroll_run.period_start
+            ).aggregate(total=Sum('basic_salary'))['total'] or Decimal('0.00')
+        return Decimal('0.00')
+    
+    @property
+    def ytd_wages(self):
+        if self.employee.is_wage_employee:
+            start = datetime.date(self.payroll_run.period_start.year, 3, 1)
+            payslips = Payslip.objects.filter(
+                employee=self.employee,
+                payroll_run__period_start__gte=start,
+                payroll_run__period_start__lte=self.payroll_run.period_start
+            ).select_related('worked_hours')
+
+            total = Decimal('0.00')
+            for slip in payslips:
+                wh = slip.worked_hours
+                if wh:
+                    total += (
+                        wh.normal_earnings +
+                        wh.overtime_earnings +
+                        wh.saturday_earnings +
+                        wh.sunday_earnings
+                    )
+            return total
+        return Decimal('0.00')
+    
+    @property
+    def ytd_net_pay(self):
+        start_of_tax_year = datetime.date(self.payroll_run.period_start.year, 3, 1)
+        return Payslip.objects.filter(
+            employee=self.employee,
+            payroll_run__period_start__gte=start_of_tax_year,
+            payroll_run__period_start__lte=self.payroll_run.period_start
+        ).aggregate(total=Sum('net_pay'))['total'] or Decimal('0.00')
+    
+    @property
+    def ytd_gross_income(self):
+        start = datetime.date(self.payroll_run.period_start.year, 3, 1)
+        return Payslip.objects.filter(
+            employee=self.employee,
+            payroll_run__period_start__gte=start,
+            payroll_run__period_start__lte=self.payroll_run.period_start
+        ).aggregate(total=Sum('gross_income'))['total'] or Decimal('0.00')
+
+    @property
+    def ytd_total_deductions(self):
+        return (self.tax or Decimal('0.00')) + (self.uif or Decimal('0.00'))
+
+    @property
+    def ytd_tax(self):
+        start = datetime.date(self.payroll_run.period_start.year, 3, 1)
+        return Payslip.objects.filter(
+            employee=self.employee,
+            payroll_run__period_start__gte=start,
+            payroll_run__period_start__lte=self.payroll_run.period_start
+        ).aggregate(total=Sum('tax'))['total'] or Decimal('0.00')
+    
+    @property
+    def ytd_uif(self):
+        start = datetime.date(self.payroll_run.period_start.year, 3, 1)
+        return Payslip.objects.filter(
+            employee=self.employee,
+            payroll_run__period_start__gte=start,
+            payroll_run__period_start__lte=self.payroll_run.period_start
+        ).aggregate(total=Sum('uif'))['total'] or Decimal('0.00')
+    
+    @property
+    def ytd_sdl(self):
+        start = datetime.date(self.payroll_run.period_start.year, 3, 1)
+        return Payslip.objects.filter(
+            employee=self.employee,
+            payroll_run__period_start__gte=start,
+            payroll_run__period_start__lte=self.payroll_run.period_start
+        ).aggregate(total=Sum('sdl'))['total'] or Decimal('0.00')
+    
+    @property
+    def total_employer_contribution(self):
+        return (self.sdl or Decimal('0.00')) + (self.uif or Decimal('0.00'))
+    
+    @property
+    def ytd_total_employer_contribution(self):
+        start = datetime.date(self.payroll_run.period_start.year, 3, 1)
+        totals = Payslip.objects.filter(
+            employee=self.employee,
+            payroll_run__period_start__gte=start,
+            payroll_run__period_start__lte=self.payroll_run.period_start
+        ).aggregate(
+            total_sdl=Sum('sdl'),
+            total_uif=Sum('uif')
+        )
+        return (totals['total_sdl'] or Decimal('0.00')) + (totals['total_uif'] or Decimal('0.00'))
 
     def save(self, *args, **kwargs):
         if self.employee.is_wage_employee:
