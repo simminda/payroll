@@ -1,7 +1,59 @@
 {% extends "payroll/base.html" %}
 
 {% block content %}
+<h1 class="mb-4">Dashboard</h1>
 
-<h1>DASHBOARD</h1>
+<div class="row">
+  <div class="col-md-6 mb-4">
+    <div class="card shadow p-3">
+      <h5>Total Basic Salary by Employee</h5>
+      <canvas id="salaryChart"></canvas>
+    </div>
+  </div>
 
+  <div class="col-md-6 mb-4">
+    <div class="card shadow p-3">
+      <h5>Tax vs Net Pay</h5>
+      <canvas id="taxNetChart"></canvas>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Basic Salary by Employee
+  const salaryCtx = document.getElementById('salaryChart');
+  new Chart(salaryCtx, {
+    type: 'bar',
+    data: {
+      labels: {{ labels|safe }},
+      datasets: [{
+        label: 'Basic Salary',
+        data: {{ basic_salaries|safe }},
+        backgroundColor: 'rgba(54, 162, 235, 0.7)',
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } }
+    }
+  });
+
+  // Tax vs Net Pay Pie
+  const taxNetCtx = document.getElementById('taxNetChart');
+  new Chart(taxNetCtx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Tax', 'Net Pay'],
+      datasets: [{
+        data: [{{ tax_total }}, {{ net_pay_total }}],
+        backgroundColor: ['#dc3545', '#28a745']
+      }]
+    },
+    options: { responsive: true }
+  });
+</script>
 {% endblock %}

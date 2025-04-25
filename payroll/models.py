@@ -213,6 +213,19 @@ class Payslip(models.Model):
 
     def __str__(self):
         return f"{self.employee.first_name} {self.employee.last_name} – {self.payroll_run.period_start.strftime('%b %Y')}"
+    
+    def get_income_total(self):
+        wh = self.worked_hours
+        return (
+            (self.basic_salary or 0) +
+            (wh.normal_earnings if wh else 0) +
+            (wh.overtime_earnings if wh else 0) +
+            (wh.saturday_earnings if wh else 0) +
+            (wh.sunday_earnings if wh else 0)
+        )
+
+    def get_deductions_total(self):
+        return (self.tax or 0) + (self.uif or 0)
 
     def save(self, *args, **kwargs):
         if self.employee.is_wage_employee:

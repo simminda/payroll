@@ -24,13 +24,21 @@ VALID_STATUSES = [
 
 @login_required
 def dashboard(request):
-    company_id = request.session.get('company_id')
-    company = Company.objects.get(id=company_id) if company_id else None
-    active_employees = Employee.objects.filter(status='active').count()
-    return render(request, 'payroll/dashboard.html', {
-        'company': company,
-        'active_employees': active_employees
-        })
+    payslips = Payslip.objects.all()
+
+    labels = [f"{p.employee.first_name} {p.employee.last_name}" for p in payslips]
+    basic_salaries = [float(p.basic_salary or 0) for p in payslips]
+
+    tax_total = payslips.aggregate(Sum('tax'))['tax__sum'] or 0
+    net_pay_total = payslips.aggregate(Sum('net_pay'))['net_pay__sum'] or 0
+
+    context = {
+        'labels': labels,
+        'basic_salaries': basic_salaries,
+        'tax_total': tax_total,
+        'net_pay_total': net_pay_total,
+    }
+    return render(request, 'payroll/dashboard.html', context)
 
 
 def employee_list(request):
@@ -270,6 +278,17 @@ def payslips_summary(request):
         'overtime_hours_total': sum(p.worked_hours.overtime_earnings or 0 for p in payslips if p.worked_hours),
         'saturday_hours_total': sum(p.worked_hours.saturday_earnings or 0 for p in payslips if p.worked_hours),
         'sunday_hours_total': sum(p.worked_hours.sunday_earnings or 0 for p in payslips if p.worked_hours),
+
+        # Extra columns
+        'income_total': sum(
+            (p.basic_salary or 0)
+            + (p.worked_hours.normal_earnings or 0 if p.worked_hours else 0)
+            + (p.worked_hours.overtime_earnings or 0 if p.worked_hours else 0)
+            + (p.worked_hours.saturday_earnings or 0 if p.worked_hours else 0)
+            + (p.worked_hours.sunday_earnings or 0 if p.worked_hours else 0)
+            for p in payslips
+        ),
+        'deductions_total': sum(p.tax + p.uif for p in payslips),
     }
 
     paginator = Paginator(payslips, 10)

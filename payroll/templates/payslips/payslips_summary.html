@@ -39,11 +39,11 @@
             <td>{% if payslip.worked_hours.overtime_earnings %}R{{ payslip.worked_hours.overtime_earnings|floatformat:2|intcomma }}{% else %}R0.00{% endif %}</td>
             <td>{% if payslip.worked_hours.saturday_earnings %}R{{ payslip.worked_hours.saturday_earnings|floatformat:2|intcomma }}{% else %}R0.00{% endif %}</td>
             <td>{% if payslip.worked_hours.sunday_earnings %}R{{ payslip.worked_hours.sunday_earnings|floatformat:2|intcomma }}{% else %}R0.00{% endif %}</td>
-            <td></td>
+            <td style="font-weight: bold;">R{{ payslip.get_income_total|floatformat:2|intcomma }}</td>
             <td>R{{ payslip.tax|floatformat:2|intcomma }}</td>
             <td>R{{ payslip.uif|floatformat:2|intcomma }}</td>
-            <td>R{{ payslip.tbc|default:"0.00"|floatformat:2|intcomma }}</td>
-            <td>R{{ payslip.net_pay|floatformat:2|intcomma }}</td>
+            <td style="font-weight: bold;">R{{ payslip.get_deductions_total|floatformat:2|intcomma }}</td>
+            <td style="font-weight: bolder;">R{{ payslip.net_pay|floatformat:2|intcomma }}</td>
             <td>
                 <!-- Button to trigger the modal -->
                 <button type="button"
@@ -67,10 +67,10 @@
             <td>R{{ totals.overtime_hours_total|floatformat:2|intcomma }}</td>
             <td>R{{ totals.saturday_hours_total|floatformat:2|intcomma }}</td>
             <td>R{{ totals.sunday_hours_total|floatformat:2|intcomma }}</td>
-            <td></td>
+            <td>R{{ totals.income_total|floatformat:2|intcomma }}</td>
             <td>R{{ totals.tax|floatformat:2|intcomma }}</td>
             <td>R{{ totals.uif|floatformat:2|intcomma }}</td>
-            <td></td>
+            <td>R{{ totals.deductions_total|floatformat:2|intcomma }}</td>
             <td>R{{ totals.net_pay|floatformat:2|intcomma }}</td>
             <td></td>
         </tr>
