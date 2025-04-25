@@ -175,12 +175,19 @@ def payslips_summary(request):
 
     for employee in active_employees:
         # Calculate all values first
+        worked_hours = None
         if employee.is_wage_employee:
-            try:
-                worked_hours = WorkedHours.objects.get(employee=employee, payroll_run=payroll_run)
+                worked_hours, wh_created = WorkedHours.objects.get_or_create(
+                    employee=employee, 
+                    payroll_run=payroll_run,
+                    defaults={
+                        'normal_hours': 0,
+                        'overtime_hours': 0,
+                        'saturday_hours': 0,
+                        'sunday_public_hours': 0,
+                    }
+                )
                 gross_income = worked_hours.calculate_gross_pay()
-            except WorkedHours.DoesNotExist:
-                gross_income = Decimal('0.00')
         else:
             gross_income = employee.salary or Decimal('0.00')
         
