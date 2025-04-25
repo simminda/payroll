@@ -10,15 +10,15 @@
         <div class="card-header bg-primary text-white">
             <div class="row">
                 <div class="col-8">
-                    <h3 class="mb-0">{{ company.name|default:"HyperionDev" }}</h3>
-                    <p class="mb-0">{{ company.address_line1|default:"6 Cotswold Drive" }}</p>
-                    <p class="mb-0">{{ company.address_line2|default:"Westville" }}</p>
-                    <p class="mb-0">{{ company.city|default:"Durban" }}</p>
-                    <p class="mb-0">{{ company.postal_code|default:"3630" }}</p>
+                    <h3 class="mb-0">{{ company.name|default:"Company A" }}</h3>
+                    <p class="mb-0">{{ company.address_line1|default:"1 ABC Street" }}</p>
+                    <p class="mb-0">{{ company.address_line2|default:"ABC Town" }}</p>
+                    <p class="mb-0">{{ company.city|default:"ABC City" }}</p>
+                    <p class="mb-0">{{ company.postal_code|default:"0000" }}</p>
                 </div>
                 <div class="col-4 text-end">
                     <h4 class="mb-0">PAYSLIP</h4>
-                    <p class="mb-0">Period: {{ payslip.payroll_run.start_date|date:"Y-m-d" }} to {{ payslip.payroll_run.end_date|date:"Y-m-d" }}</p>
+                    <p class="mb-0" style="font-size: 14px;">Period: {{ payslip.payroll_run.period_start|date:"Y-m-d" }} to {{ payslip.payroll_run.period_end|date:"Y-m-d" }}</p>
                 </div>
             </div>
         </div>
@@ -28,15 +28,15 @@
             <div class="row mb-4">
                 <div class="col-md-6">
                     <h5 class="fw-bold border-bottom pb-2">Employee Details</h5>
-                    <p class="mb-1"><strong>Name:</strong> {{ payslip.employee.last_name }}, {{ payslip.employee.first_name }}</p>
-                    <p class="mb-1"><strong>ID Number:</strong> {{ payslip.employee.id_number }}</p>
-                    <p class="mb-1"><strong>Employee Number:</strong> {{ payslip.employee.employee_number }}</p>
-                    <p class="mb-1"><strong>Job Title:</strong> {{ payslip.employee.job_title }}</p>
+                    <p class="mb-1"><strong>Name &nbsp;:</strong> {{ payslip.employee.last_name }}, {{ payslip.employee.first_name }}</p>
+                    <p class="mb-1"><strong>ID No. :</strong> {{ payslip.employee.id_number }}</p>
+                    <p class="mb-1"><strong>Employee No. :</strong> {{ payslip.employee.id }}</p>
+                    <p class="mb-1"><strong>Job Title :</strong> {{ payslip.employee.job_title }}</p>
                 </div>
                 <div class="col-md-6">
                     <h5 class="invisible">Spacing</h5>
                     <p class="mb-1"><strong>Income Tax Number:</strong> {{ payslip.employee.tax_number }}</p>
-                    <p class="mb-1"><strong>Employment Date:</strong> {{ payslip.employee.date_joined|date:"d M Y" }}</p>
+                    <p class="mb-1"><strong>Employment Date&emsp;:</strong> {{ payslip.employee.date_joined|date:"d M Y" }}</p>
                 </div>
             </div>
 
@@ -50,8 +50,8 @@
                         <table class="table table-sm table-bordered">
                             <thead class="table-light">
                                 <tr>
-                                    <th></th>
-                                    <th class="text-end">Current</th>
+                                    <th style="width: 60%;"></th>
+                                    <th class="text-end" style="width: 20%;">Current</th>
                                     <th class="text-end">YTD</th>
                                 </tr>
                             </thead>
@@ -63,12 +63,12 @@
                                 </tr>
                                 <tr>
                                     <td>Wages</td>
-                                    <td class="text-end">R{{ payslip.hourly_pay|default:"121.15"|floatformat:2|intcomma }}</td>
+                                    <td class="text-end">R{{ payslip.get_wages_total|default:"0.00"|floatformat:2|intcomma }}</td>
                                     <td class="text-end">R{{ payslip.ytd_hourly_pay|default:""|floatformat:2|intcomma }}</td>
                                 </tr>
                                 <tr class="table-secondary">
                                     <td><strong>Gross Earnings</strong></td>
-                                    <td class="text-end"><strong>R{{ payslip.basic_salary|default:"11871.15"|floatformat:2|intcomma }}</strong></td>
+                                    <td class="text-end"><strong>R{{ payslip.get_income_total|default:"0.00"|floatformat:2|intcomma }}</strong></td>
                                     <td class="text-end"><strong>R{{ payslip.ytd_basic_salary|default:""|floatformat:2|intcomma }}</strong></td>
                                 </tr>
                             </tbody>
@@ -87,8 +87,8 @@
                         <table class="table table-sm table-bordered">
                             <thead class="table-light">
                                 <tr>
-                                    <th></th>
-                                    <th class="text-end">Current</th>
+                                    <th style="width: 60%;"></th>
+                                    <th class="text-end" style="width: 20%;">Current</th>
                                     <th class="text-end">YTD</th>
                                 </tr>
                             </thead>
@@ -105,8 +105,8 @@
                                 </tr>
                                 <tr class="table-secondary">
                                     <td><strong>Total Deductions</strong></td>
-                                    <td class="text-end"><strong>R{{ payslip.total_deductions|default:"0.00"|floatformat:2|intcomma }}</strong></td>
-                                    <td class="text-end"><strong>R{{ payslip.ytd_total_deductions|default:""|floatformat:2|intcomma }}</strong></td>
+                                    <td class="text-end"><strong>R{{ payslip.get_deductions_total|default:"0.00"|floatformat:2|intcomma }}</strong></td>
+                                    <td class="text-end"><strong>R{{ payslip.ytd_total_deductions|default:"0.00"|floatformat:2|intcomma }}</strong></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -121,9 +121,9 @@
                         <table class="table table-sm table-bordered">
                             <tbody>
                                 <tr class="table-primary">
-                                    <td><strong>Net Pay</strong></td>
-                                    <td class="text-end"><strong>R{{ payslip.net_pay|default:"11059.38"|floatformat:2|intcomma }}</strong></td>
-                                    <td class="text-end"><strong>R{{ payslip.ytd_net_pay|default:""|floatformat:2|intcomma }}</strong></td>
+                                    <td style="width: 60%;"><strong>Net Pay</strong></td>
+                                    <td class="text-end" style="width: 20%;"><strong>R{{ payslip.net_pay|default:"0.00"|floatformat:2|intcomma }}</strong></td>
+                                    <td class="text-end"><strong>R{{ payslip.ytd_net_pay|default:"0.00"|floatformat:2|intcomma }}</strong></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -141,8 +141,8 @@
                         <table class="table table-sm table-bordered">
                             <thead class="table-light">
                                 <tr>
-                                    <th></th>
-                                    <th class="text-end">Current</th>
+                                    <th style="width: 60%;"></th>
+                                    <th class="text-end" style="width: 20%;">Current</th>
                                     <th class="text-end">YTD</th>
                                 </tr>
                             </thead>
@@ -168,10 +168,10 @@
                 </div>
             </div>
 
-            <!-- Rates & Quantities -->
+            <!-- Hours worked -->
             <div class="row mb-4">
                 <div class="col-12">
-                    <h5 class="fw-bold border-bottom pb-2">Rates & Quantities</h5>
+                    <h5 class="fw-bold border-bottom pb-2">Hours</h5>
                 </div>
                 <div class="col-6">
                     <div class="table-responsive">
@@ -180,29 +180,24 @@
                                 <tr>
                                     <th>Type</th>
                                     <th class="text-end">Quantity</th>
-                                    <th class="text-end">Rate</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr>
                                     <td>Normal</td>
-                                    <td class="text-end">{{ payslip.normal_hours|default:"0.0" }}</td>
-                                    <td class="text-end">R{{ payslip.normal_rate|default:"0.0"|floatformat:2 }}</td>
+                                    <td class="text-end">{{ payslip.worked_hours.normal_hours|default:"0" }}</td>
                                 </tr>
                                 <tr>
                                     <td>Overtime</td>
-                                    <td class="text-end">{{ payslip.overtime_hours|default:"0.0" }}</td>
-                                    <td class="text-end">R{{ payslip.normal_rate|default:"0.0"|floatformat:2 }}</td>
+                                    <td class="text-end">{{ payslip.worked_hours.overtime_hours|default:"0" }}</td>
                                 </tr>
                                 <tr>
                                     <td>Saturday</td>
-                                    <td class="text-end">{{ payslip.saturday_hours|default:"0.0" }}</td>
-                                    <td class="text-end">R{{ payslip.normal_rate|default:"0.0"|floatformat:2 }}</td>
+                                    <td class="text-end">{{ payslip.worked_hours.saturday_hours|default:"0" }}</td>
                                 </tr>
                                 <tr>
                                     <td>Sunday/Public Holiday</td>
-                                    <td class="text-end">{{ payslip.overtime_hours|default:"0.0" }}</td>
-                                    <td class="text-end">R{{ payslip.normal_rate|default:"0.0"|floatformat:2 }}</td>
+                                    <td class="text-end">{{ payslip.worked_hours.sunday_public_hours|default:"0" }}</td>
                                 </tr>
                             </tbody>
                         </table>

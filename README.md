@@ -104,3 +104,7 @@ Uploaded profile pictures are stored in `media/employee_pictures/`.
 
 ### Payslips Summary
 ![payslips_summary](./screenshots/payslips_summary.png)
+
+### Payslip (Wage employee) - Pre-YTD logic
+![payslip1](./screenshots/payslip1.png)
+![payslip2](./screenshots/payslip2.png)

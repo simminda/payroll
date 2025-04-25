@@ -226,6 +226,15 @@ class Payslip(models.Model):
 
     def get_deductions_total(self):
         return (self.tax or 0) + (self.uif or 0)
+    
+    def get_wages_total(self):
+        wh = self.worked_hours
+        return (
+            (wh.normal_earnings if wh else 0) +
+            (wh.overtime_earnings if wh else 0) +
+            (wh.saturday_earnings if wh else 0) +
+            (wh.sunday_earnings if wh else 0)
+        )
 
     def save(self, *args, **kwargs):
         if self.employee.is_wage_employee:
