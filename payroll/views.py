@@ -338,3 +338,6 @@ def update_payslip(request, payslip_id):
         hours_form = WorkedHoursForm(instance=worked_hours)
 
     return redirect('payslips_summary')
+
+def leave_summary(request):
+    return render(request, 'leave/leave_summary.html')

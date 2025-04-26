@@ -1,0 +1,107 @@
+{% extends 'payroll/base.html' %} {% load humanize %}
+
+
+{% block title %}Leave Summary{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Leave balances as at {{ payroll_run.period_end|date:"F Y" }}</h2>
+
+<form method="get" class="d-flex align-items-center gap-2 mb-3" >
+    <div style="margin: auto; width: 500px; display: flex;">
+        <input type="text" name="q" value="{{ query }}" class="form-control" placeholder="Search name or ID number">
+        &nbsp;
+        <select name="status" class="form-select">
+            <option value="">All Leave</option>
+            <option value="annual_leave" {% if request.GET.status == "annual_leave" %}selected{% endif %}>Annual Leave</option>
+            <option value="sick_leave" {% if request.GET.status == "sick_leave" %}selected{% endif %}>Sick Leave</option>
+            <option value="family_leave" {% if request.GET.status == "family_leave" %}selected{% endif %}>Family Leave</option>
+            <option value="maternity_leave" {% if request.GET.status == "maternity_leave" %}selected{% endif %}>Maternity Leave</option>
+            <option value="parental_leave" {% if request.GET.status == "parental_leave" %}selected{% endif %}>Parental Leave</option>
+            <option value="study_leave" {% if request.GET.status == "study_leave" %}selected{% endif %}>Study Leave</option>
+          </select>
+        </select>
+        &nbsp;
+        <button type="submit" class="btn btn-outline-primary">Search</button>
+    </div>
+</form>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Employee</th>
+            <th>Annual Leave</th>
+            <th>Sick Leave</th>
+            <th>Family Leave</th>
+            <th>Maternity Leave</th>
+            <th>Parental Leave</th>
+            <th>Study Leave</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for payslip in payslips %}
+        <tr>
+            <td>{{ payslip.employee.first_name }} {{ payslip.employee.last_name }}</td>
+            <td>{% if payslip.basic_salary %} {{ payslip.basic_salary|floatformat:2|intcomma }}{% else %}R0.00{% endif %}</td>
+            <td>{% if payslip.worked_hours.normal_earnings %} {{ payslip.worked_hours.normal_earnings|floatformat:2|intcomma }}{% else %}R0.00{% endif %}</td>
+            <td>{% if payslip.worked_hours.overtime_earnings %} {{ payslip.worked_hours.overtime_earnings|floatformat:2|intcomma }}{% else %}R0.00{% endif %}</td>
+            <td>{% if payslip.worked_hours.saturday_earnings %} {{ payslip.worked_hours.saturday_earnings|floatformat:2|intcomma }}{% else %}R0.00{% endif %}</td>
+            <td>{% if payslip.worked_hours.sunday_earnings %} {{ payslip.worked_hours.sunday_earnings|floatformat:2|intcomma }}{% else %}R0.00{% endif %}</td>
+            <td>
+                <!-- Button to trigger the modal -->
+                <button type="button"
+                        class="btn btn-sm btn-outline-warning"
+                        data-bs-toggle="modal"
+                        data-bs-target="#editPayslipModal-{{ payslip.id }}">
+                    Edit
+                </button>
+                <a href="{% url 'payslip_detail' payslip.id %}" class="btn btn-sm btn-outline-info">View</a>
+            </td>
+        </tr>
+        <!-- Modal for editing payslip -->
+        {% include 'payslips/_edit_payslip_modal.html' with payslip=payslip hours=payslip.worked_hours %}
+        {% endfor %}
+    </tbody>
+    <tfoot class="table-light fw-bold">
+        <tr>
+            <td>Total</td>
+            <td>{{ totals.basic_salary_total|floatformat:2|intcomma }}</td>
+            <td>{{ totals.normal_hours_total|floatformat:2|intcomma }}</td>
+            <td>{{ totals.overtime_hours_total|floatformat:2|intcomma }}</td>
+            <td>{{ totals.saturday_hours_total|floatformat:2|intcomma }}</td>
+            <td>{{ totals.deductions_total|floatformat:2|intcomma }}</td>
+            <td>{{ totals.net_pay|floatformat:2|intcomma }}</td>
+            <td></td>
+        </tr>
+    </tfoot>
+</table>
+
+<!-- Pagination Controls -->
+<nav>
+    <ul class="pagination justify-content-center">
+        {% if payslips.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?page=1">&laquo; First</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ payslips.previous_page_number }}">Previous</a>
+        </li>
+        {% endif %}
+
+        <li class="page-item disabled">
+            <span class="page-link">Page {{ payslips.number }} of {{payslips.paginator.num_pages}}</span>
+        </li>
+
+        {% if payslips.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ payslips.next_page_number }}">Next</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ payslips.paginator.num_pages }}">Last &raquo;</a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+
+
+{% endblock %}

@@ -8,7 +8,6 @@ from django.contrib.auth.models import AbstractUser
 from datetime import date
 from django.db.models import Sum
 
-
 import datetime
 
 
@@ -481,3 +480,177 @@ class TaxBracket(models.Model):
 
     def __str__(self):
         return f"{self.tax_year}: {self.lower_limit} - {self.upper_limit or '∞'}"
+    
+
+class LeaveType(models.TextChoices):
+    ANNUAL = 'Annual', 'Annual Leave'
+    SICK = 'Sick', 'Sick Leave'
+    FAMILY = 'Family', 'Family Responsibility Leave'
+    MATERNITY = 'Maternity', 'Maternity Leave'
+    PARENTAL = 'Parental', 'Parental Leave'
+    STUDY = 'Study', 'Study Leave'
+
+
+class LeaveBalance(models.Model):
+    employee = models.ForeignKey('Employee', on_delete=models.CASCADE)
+    leave_type = models.CharField(max_length=20, choices=LeaveType.choices)
+    total_days = models.DecimalField(max_digits=5, decimal_places=2)
+    used_days = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('0.00'))
+    cycle_start = models.DateField(default=datetime.date.today)
+    
+    # For maternity/parental leave tracking
+    related_event_date = models.DateField(null=True, blank=True)  # Date of birth/adoption
+    documentation_submitted = models.BooleanField(default=False)  # Track if required docs are submitted
+
+    class Meta:
+        unique_together = ('employee', 'leave_type')
+
+    def __str__(self):
+        return f"{self.employee} - {self.get_leave_type_display()}"
+
+    @property
+    def remaining_days(self):
+        return max(Decimal('0.00'), self.total_days - self.used_days)
+    
+    @classmethod
+    def initialize_leave_for_employee(cls, employee):
+        """Creates default leave balances for a new employee"""
+        leave_allocations = {
+            LeaveType.ANNUAL: Decimal('17.00'),
+            LeaveType.SICK: Decimal('30.00'),  # 30 days over 3-year cycle
+            LeaveType.FAMILY: Decimal('3.00'),  # 3 days per year
+            LeaveType.MATERNITY: Decimal('120.00'),  # ~4 months (in working days)
+            LeaveType.PARENTAL: Decimal('10.00'),  # 10 days
+            LeaveType.STUDY: Decimal('5.00'),  # 5 days per year
+        }
+        
+        for leave_type, allocation in leave_allocations.items():
+            cls.objects.create(
+                employee=employee,
+                leave_type=leave_type,
+                total_days=allocation,
+                used_days=Decimal('0.00'),
+                cycle_start=datetime.date.today()
+            )
+
+    def reset_cycle(self):
+        """
+        Resets leave based on South African BCEA requirements for each leave type.
+        """
+        today = datetime.date.today()
+
+        if self.leave_type == LeaveType.ANNUAL:
+            if today >= self.cycle_start.replace(year=self.cycle_start.year + 1):
+                self.total_days = Decimal('17.00')  # Standard reset
+                self.used_days = Decimal('0.00')
+                self.cycle_start = today
+                self.save()
+
+        elif self.leave_type == LeaveType.SICK:
+            if today >= self.cycle_start.replace(year=self.cycle_start.year + 3):
+                self.total_days = Decimal('30.00')  # 30 days over 3 years
+                self.used_days = Decimal('0.00')
+                self.cycle_start = today
+                self.save()
+                
+        elif self.leave_type == LeaveType.FAMILY:
+            if today >= self.cycle_start.replace(year=self.cycle_start.year + 1):
+                self.total_days = Decimal('3.00')  # 3 days per year
+                self.used_days = Decimal('0.00')
+                self.cycle_start = today
+                self.save()
+                
+        elif self.leave_type == LeaveType.STUDY:
+            if today >= self.cycle_start.replace(year=self.cycle_start.year + 1):
+                self.total_days = Decimal('5.00')  # 5 days per year as specified
+                self.used_days = Decimal('0.00')
+                self.cycle_start = today
+                self.save()
+        
+        # Maternity and Parental leave don't reset on cycles
+        # They're event-based and should be handled differently
+
+
+class LeaveRequest(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+    ]
+    
+    employee = models.ForeignKey('Employee', on_delete=models.CASCADE)
+    leave_type = models.CharField(max_length=20, choices=LeaveType.choices)
+    start_date = models.DateField()
+    end_date = models.DateField()
+    days_requested = models.DecimalField(max_digits=5, decimal_places=2)
+    reason = models.TextField()
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
+    
+    # For maternity/parental leave tracking
+    expected_birth_date = models.DateField(null=True, blank=True)
+    actual_birth_date = models.DateField(null=True, blank=True)
+    documentation_reference = models.CharField(max_length=255, blank=True, null=True)
+    
+    # For tracking approvals
+    submitted_date = models.DateTimeField(auto_now_add=True)
+    approved_by = models.ForeignKey('Employee', null=True, blank=True, 
+                                   on_delete=models.SET_NULL, related_name='approvals')
+    approval_date = models.DateTimeField(null=True, blank=True)
+    
+    def __str__(self):
+        return f"{self.employee} - {self.get_leave_type_display()} ({self.start_date} to {self.end_date})"
+    
+    def approve(self, approver):
+        """Approve a leave request and update balances"""
+        if self.status == 'pending':
+            self.status = 'approved'
+            self.approved_by = approver
+            self.approval_date = datetime.datetime.now()
+            
+            # Update the leave balance
+            leave_balance = LeaveBalance.objects.get(employee=self.employee, leave_type=self.leave_type)
+            leave_balance.used_days += self.days_requested
+            leave_balance.save()
+            
+            self.save()
+            return True
+        return False
+    
+    def reject(self, approver):
+        """Reject a leave request"""
+        if self.status == 'pending':
+            self.status = 'rejected'
+            self.approved_by = approver
+            self.approval_date = datetime.datetime.now()
+            self.save()
+            return True
+        return False
+    
+    def validate_leave_request(self):
+        """Validates if the leave request meets policy requirements"""
+        errors = []
+        leave_balance = LeaveBalance.objects.get(employee=self.employee, leave_type=self.leave_type)
+        
+        # Check if employee has enough balance
+        if self.days_requested > leave_balance.remaining_days and self.leave_type not in [LeaveType.MATERNITY, LeaveType.PARENTAL]:
+            errors.append(f"Insufficient {self.get_leave_type_display()} balance")
+        
+        # Special validations for different leave types
+        if self.leave_type == LeaveType.MATERNITY:
+            if not self.expected_birth_date:
+                errors.append("Expected birth date must be provided for maternity leave")
+            if self.expected_birth_date and self.start_date > self.expected_birth_date:
+                errors.append("Maternity leave must start before or on the expected birth date")
+        
+        elif self.leave_type == LeaveType.PARENTAL:
+            if not self.actual_birth_date and not self.expected_birth_date:
+                errors.append("Birth date information must be provided for parental leave")
+            # Check if within 4 months of birth
+            if self.actual_birth_date and (self.start_date - self.actual_birth_date).days > 120:
+                errors.append("Parental leave must be taken within 4 months of birth")
+        
+        elif self.leave_type == LeaveType.FAMILY:
+            if not self.reason:
+                errors.append("Reason must be provided for family responsibility leave")
+        
+        return errors
