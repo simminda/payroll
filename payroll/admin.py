@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import CustomUser, Employee, PayrollRun, Payslip, WorkingHoursConfig, Company, TaxBracket, WorkedHours
+from .models import CustomUser, Employee, PayrollRun, Payslip, WorkingHoursConfig, Company, TaxBracket, WorkedHours, LeaveBalance, LeaveRequest
 
 admin.site.register(CustomUser)
 admin.site.register(Company)
@@ -8,6 +8,8 @@ admin.site.register(PayrollRun)
 admin.site.register(Payslip)
 admin.site.register(TaxBracket)
 admin.site.register(WorkedHours)
+admin.site.register(LeaveRequest)
+admin.site.register(LeaveBalance)
 
 @admin.register(WorkingHoursConfig)
 class WorkingHoursConfigAdmin(admin.ModelAdmin):

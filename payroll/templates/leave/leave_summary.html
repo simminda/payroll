@@ -39,27 +39,23 @@
         </tr>
     </thead>
     <tbody>
-        {% for payslip in payslips %}
+        {% for employee in employees %}
         <tr>
-            <td>{{ payslip.employee.first_name }} {{ payslip.employee.last_name }}</td>
-            <td>{% if payslip.basic_salary %} {{ payslip.basic_salary|floatformat:2|intcomma }}{% else %}R0.00{% endif %}</td>
-            <td>{% if payslip.worked_hours.normal_earnings %} {{ payslip.worked_hours.normal_earnings|floatformat:2|intcomma }}{% else %}R0.00{% endif %}</td>
-            <td>{% if payslip.worked_hours.overtime_earnings %} {{ payslip.worked_hours.overtime_earnings|floatformat:2|intcomma }}{% else %}R0.00{% endif %}</td>
-            <td>{% if payslip.worked_hours.saturday_earnings %} {{ payslip.worked_hours.saturday_earnings|floatformat:2|intcomma }}{% else %}R0.00{% endif %}</td>
-            <td>{% if payslip.worked_hours.sunday_earnings %} {{ payslip.worked_hours.sunday_earnings|floatformat:2|intcomma }}{% else %}R0.00{% endif %}</td>
+            <td>{{ employee.first_name }} {{ employee.last_name }}</td>
+            <td>{{ employee.leave_balances.Annual|default:"0"|floatformat:2 }}</td>
+            <td>{{ employee.leave_balances.Sick|default:"0"|floatformat:0 }}</td>
+            <td>{{ employee.leave_balances.Family|default:"0"|floatformat:0 }}</td>
+            <td>{{ employee.leave_balances.Maternity|default:"0"|floatformat:0 }}</td>
+            <td>{{ employee.leave_balances.Parental|default:"0"|floatformat:0 }}</td>
+            <td>{{ employee.leave_balances.Study|default:"0"|floatformat:0 }}</td>
             <td>
-                <!-- Button to trigger the modal -->
-                <button type="button"
-                        class="btn btn-sm btn-outline-warning"
-                        data-bs-toggle="modal"
-                        data-bs-target="#editPayslipModal-{{ payslip.id }}">
-                    Edit
-                </button>
-                <a href="{% url 'payslip_detail' payslip.id %}" class="btn btn-sm btn-outline-info">View</a>
-            </td>
+                <!-- Trigger the modal -->
+                <button class="btn btn-sm btn-outline-info edit-leave-btn" 
+                    data-bs-toggle="modal" 
+                    data-bs-target="#editLeaveBalanceModal" 
+                    data-employee-id="{{ employee.id }}"
+                    data-employee-name="{{ employee.first_name }} {{ employee.last_name }}">View</button>
         </tr>
-        <!-- Modal for editing payslip -->
-        {% include 'payslips/_edit_payslip_modal.html' with payslip=payslip hours=payslip.worked_hours %}
         {% endfor %}
     </tbody>
     <tfoot class="table-light fw-bold">
@@ -79,29 +75,95 @@
 <!-- Pagination Controls -->
 <nav>
     <ul class="pagination justify-content-center">
-        {% if payslips.has_previous %}
+        {% if employees.has_previous %}
         <li class="page-item">
             <a class="page-link" href="?page=1">&laquo; First</a>
         </li>
         <li class="page-item">
-            <a class="page-link" href="?page={{ payslips.previous_page_number }}">Previous</a>
+            <a class="page-link" href="?page={{ employees.previous_page_number }}">Previous</a>
         </li>
         {% endif %}
 
         <li class="page-item disabled">
-            <span class="page-link">Page {{ payslips.number }} of {{payslips.paginator.num_pages}}</span>
+            <span class="page-link">Page {{ employees.number }} of {{employees.paginator.num_pages}}</span>
         </li>
 
-        {% if payslips.has_next %}
+        {% if employees.has_next %}
         <li class="page-item">
-            <a class="page-link" href="?page={{ payslips.next_page_number }}">Next</a>
+            <a class="page-link" href="?page={{ employees.next_page_number }}">Next</a>
         </li>
         <li class="page-item">
-            <a class="page-link" href="?page={{ payslips.paginator.num_pages }}">Last &raquo;</a>
+            <a class="page-link" href="?page={{ employees.paginator.num_pages }}">Last &raquo;</a>
         </li>
         {% endif %}
     </ul>
 </nav>
+
+<!-- Include Modal -->
+<div class="modal fade" id="editLeaveBalanceModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <form method="post" id="leaveBalanceForm" action="" enctype="multipart/form-data">
+          {% csrf_token %}
+          <div class="modal-header">
+            <h5 class="modal-title" id="modalEmployeeName">Edit</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <!-- Form fields -->
+          </div>
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-success">Save Changes</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+  const modal = document.getElementById('editLeaveBalanceModal');
+  modal.addEventListener('show.bs.modal', function(event) {
+    const button = event.relatedTarget;
+    const employeeId = button.getAttribute('data-employee-id');
+    const employeeName = button.getAttribute('data-employee-name');
+    
+    // Update the form action URL
+    const form = document.getElementById('leaveBalanceForm');
+    form.action = `/leave/edit_leave_balances/${employeeId}/`;
+
+    // Update the modal title
+    document.getElementById('modalEmployeeName').textContent = `Edit ${employeeName}`;
+
+    // Get the row data to pre-fill the form
+    const row = button.closest('tr');
+    console.log("Row cells:", row.cells); // Log the row cells
+
+    // Check if form fields exist before setting values
+    const annualLeaveField = document.getElementById('annual_leave');
+    const sickLeaveField = document.getElementById('sick_leave');
+    const familyLeaveField = document.getElementById('family_leave');
+    const maternityLeaveField = document.getElementById('maternity_leave');
+    const parentalLeaveField = document.getElementById('parental_leave');
+    const studyLeaveField = document.getElementById('study_leave');
+    
+    console.log("Annual Leave Field:", annualLeaveField); // Log the annual leave field
+
+    if (annualLeaveField && sickLeaveField && familyLeaveField && maternityLeaveField && parentalLeaveField && studyLeaveField) {
+      annualLeaveField.value = row.cells[1].textContent.trim();
+      sickLeaveField.value = row.cells[2].textContent.trim();
+      familyLeaveField.value = row.cells[3].textContent.trim();
+      maternityLeaveField.value = row.cells[4].textContent.trim();
+      parentalLeaveField.value = row.cells[5].textContent.trim();
+      studyLeaveField.value = row.cells[6].textContent.trim();
+    } else {
+      console.error("Form fields are missing or null");
+    }
+  });
+});
+
+</script>
 
 
 {% endblock %}

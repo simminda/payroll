@@ -76,6 +76,7 @@ Uploaded profile pictures are stored in `media/employee_pictures/`.
 - Implement "Change Cycle" on front-end
 - complete content and templates for Dashboard (P0 S+), Leave (P4 M), Reports (P1 M), Data Take On(P2 S)
 - Switch to PostgreSQL
+- employee_leave_detail page (edit from detail page)
 
 ---
 

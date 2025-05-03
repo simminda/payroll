@@ -9,6 +9,7 @@ from datetime import date
 from django.db.models import Sum
 
 import datetime
+import calendar
 
 
 class Company(models.Model):
@@ -510,7 +511,11 @@ class LeaveBalance(models.Model):
 
     @property
     def remaining_days(self):
-        return max(Decimal('0.00'), self.total_days - self.used_days)
+        if self.leave_type == LeaveType.ANNUAL:
+            accrued = self.calculate_annual_leave_accrued()
+            return max(Decimal('0.00'), accrued - self.used_days)
+        else:
+            return max(Decimal('0.00'), self.total_days - self.used_days)
     
     @classmethod
     def initialize_leave_for_employee(cls, employee):
@@ -519,8 +524,8 @@ class LeaveBalance(models.Model):
             LeaveType.ANNUAL: Decimal('17.00'),
             LeaveType.SICK: Decimal('30.00'),  # 30 days over 3-year cycle
             LeaveType.FAMILY: Decimal('3.00'),  # 3 days per year
-            LeaveType.MATERNITY: Decimal('120.00'),  # ~4 months (in working days)
-            LeaveType.PARENTAL: Decimal('10.00'),  # 10 days
+            LeaveType.MATERNITY: Decimal('0.00'),  # ~4 months (in working days)
+            LeaveType.PARENTAL: Decimal('0.00'),  # 10 days
             LeaveType.STUDY: Decimal('5.00'),  # 5 days per year
         }
         
@@ -530,8 +535,47 @@ class LeaveBalance(models.Model):
                 leave_type=leave_type,
                 total_days=allocation,
                 used_days=Decimal('0.00'),
-                cycle_start=datetime.date.today()
+                cycle_start=employee.date_joined
             )
+
+    def calculate_annual_leave_accrued(self):
+        """
+        Calculates accrued annual leave based on South African regulations.
+        Annual leave accrues at approximately 1.42 days per month (17 days per year).
+        """
+        if self.leave_type != LeaveType.ANNUAL:
+            return self.total_days
+            
+        today = datetime.date.today()
+        
+        # Calculate full months worked since cycle start
+        full_months = (today.year - self.cycle_start.year) * 12 + (today.month - self.cycle_start.month)
+        
+        # Calculate the fraction of the current month
+        days_in_month = calendar.monthrange(today.year, today.month)[1]  # Accurate days in the month
+        
+        # For employees who started in current month
+        if full_months == 0:
+            days_worked_in_first_month = today.day - self.cycle_start.day + 1  # +1 to include the start day
+            month_fraction = Decimal(str(max(0, days_worked_in_first_month) / days_in_month))
+        else:
+            # For employees with at least one full month, calculate the fraction of the current month
+            month_fraction = Decimal(str(today.day / days_in_month))
+        
+        # Calculate total months including fraction
+        total_months = Decimal(str(full_months)) + month_fraction
+        
+        # Monthly accrual rate (17 days / 12 months)
+        monthly_accrual = Decimal('1.42')
+        
+        # Calculate total accrued leave, ensuring we don't exceed the total allocation
+        accrued = min(total_months * monthly_accrual, self.total_days)
+        
+        # Debug print to check calculations (remove in production)
+        print(f"Employee: {self.employee}, Start: {self.cycle_start}, Full months: {full_months}, "
+            f"Month fraction: {month_fraction}, Total months: {total_months}, Accrued: {accrued}")
+        
+        return max(Decimal('0.00'), accrued)
 
     def reset_cycle(self):
         """
@@ -569,6 +613,19 @@ class LeaveBalance(models.Model):
         
         # Maternity and Parental leave don't reset on cycles
         # They're event-based and should be handled differently
+
+    @property
+    def leave_summary(self):
+        leave_balances = {lb.leave_type: lb for lb in self.leavebalance_set.all()}
+
+        return {
+            'annual_leave': leave_balances.get(LeaveType.ANNUAL).calculate_annual_leave_accrued() if leave_balances.get(LeaveType.ANNUAL) else Decimal('0.00'),
+            'sick_leave': leave_balances.get(LeaveType.SICK).remaining_days if leave_balances.get(LeaveType.SICK) else Decimal('0.00'),
+            'family_leave': leave_balances.get(LeaveType.FAMILY).remaining_days if leave_balances.get(LeaveType.FAMILY) else Decimal('0.00'),
+            'maternity_leave': leave_balances.get(LeaveType.MATERNITY).remaining_days if leave_balances.get(LeaveType.MATERNITY) else Decimal('0.00'),
+            'parental_leave': leave_balances.get(LeaveType.PARENTAL).remaining_days if leave_balances.get(LeaveType.PARENTAL) else Decimal('0.00'),
+            'study_leave': leave_balances.get(LeaveType.STUDY).remaining_days if leave_balances.get(LeaveType.STUDY) else Decimal('0.00'),
+        }
 
 
 class LeaveRequest(models.Model):

@@ -2,8 +2,8 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from decimal import Decimal
 from django.contrib import messages
-from .forms import EmployeeForm
-from .models import Employee, Company, Payslip, PayrollRun, WorkedHours
+from .forms import EmployeeForm, LeaveBalanceForm
+from .models import Employee, Company, Payslip, PayrollRun, WorkedHours, LeaveType, LeaveBalance, LeaveRequest
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from .forms import CompanyLoginForm
@@ -339,5 +339,106 @@ def update_payslip(request, payslip_id):
 
     return redirect('payslips_summary')
 
+
+# Leave
+@login_required
 def leave_summary(request):
-    return render(request, 'leave/leave_summary.html')
+    query = request.GET.get('q', '')
+    status_filter = request.GET.get('status', '')
+    
+    employees = Employee.objects.filter(status="active")
+
+    if query:
+        employees = employees.filter(
+            Q(first_name__icontains=query) |
+            Q(last_name__icontains=query) |
+            Q(id_number__icontains=query)
+        )
+    
+    employees = employees.order_by('last_name', 'first_name')
+    
+    # Auto-create missing leave balances
+    for employee in employees:
+        existing_balances = LeaveBalance.objects.filter(employee=employee)
+        existing_leave_types = [balance.leave_type for balance in existing_balances]
+        
+        if not existing_balances.exists():
+            # If employee has no leave balances yet, initialize all of them
+            LeaveBalance.initialize_leave_for_employee(employee)
+        else:
+            # Check if any leave types are missing and create them
+            for leave_type in LeaveType:
+                if leave_type not in existing_leave_types:
+                    leave_allocations = {
+                        LeaveType.ANNUAL: Decimal('17.00'),
+                        LeaveType.SICK: Decimal('30.00'), 
+                        LeaveType.FAMILY: Decimal('3.00'),
+                        LeaveType.MATERNITY: Decimal('120.00'),
+                        LeaveType.PARENTAL: Decimal('10.00'),
+                        LeaveType.STUDY: Decimal('5.00'),
+                    }
+                    
+                    LeaveBalance.objects.create(
+                        employee=employee,
+                        leave_type=leave_type,
+                        total_days=leave_allocations.get(leave_type, Decimal('0.00')),
+                        used_days=Decimal('0.00'),
+                        cycle_start=employee.date_joined,  # Use employee's join date
+                    )
+
+    # Calculate and attach leave balances to each employee
+    for employee in employees:
+        balances = LeaveBalance.objects.filter(employee=employee)
+        
+        # Simple dictionary matching template structure
+        leave_data = {
+            'Annual': Decimal('0.00'),
+            'Sick': Decimal('0.00'),
+            'Family': Decimal('0.00'),
+            'Maternity': Decimal('0.00'),
+            'Parental': Decimal('0.00'),
+            'Study': Decimal('0.00'),
+        }
+
+        for balance in balances:
+            leave_key = balance.leave_type
+            
+            if leave_key == LeaveType.ANNUAL:
+                accrued = balance.calculate_annual_leave_accrued()
+                leave_data[leave_key] = max(Decimal('0.00'), accrued - balance.used_days)
+            else:
+                leave_data[leave_key] = max(Decimal('0.00'), balance.total_days - balance.used_days)
+
+        employee.leave_balances = leave_data
+
+    paginator = Paginator(employees, 10)
+    page = request.GET.get('page')
+    employees = paginator.get_page(page)
+
+    current_date = timezone.now()
+    payroll_run = type('PayrollRun', (), {
+        'period_end': current_date
+    })()
+    
+    context = {
+        'employees': employees,
+        'query': query,
+        'status_filter': status_filter,
+        'payroll_run': payroll_run,
+        'leave_types': LeaveType.choices,
+    }
+    
+    return render(request, 'leave/leave_summary.html', context)
+
+
+def edit_leave_balances(request, pk):
+    employee = get_object_or_404(Employee, pk=pk)
+    
+    if request.method == 'POST':
+        form = LeaveBalanceForm(request.POST, request.FILES, instance=employee)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Leave balance updated successfully.")
+        else:
+            messages.error(request, "There was an error updating the leave balance.")
+    return render(request, 'leave/edit_leave_balance.html', {'employee': employee})

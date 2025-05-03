@@ -1,0 +1,44 @@
+<div class="modal fade" id="editLeaveBalanceModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+          <form method="post" id="leaveBalanceForm" action="" enctype="multipart/form-data">
+              {% csrf_token %}
+              <div class="modal-header">
+                  <h5 class="modal-title" id="modalEmployeeName">Edit</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                  <!-- Form fields -->
+                  <div class="mb-3">
+                      <label for="annual_leave" class="form-label">Annual Leave</label>
+                      <input type="number" id="annual_leave" name="annual_leave" class="form-control" step="0.01">
+                  </div>
+                  <div class="mb-3">
+                      <label for="sick_leave" class="form-label">Sick Leave</label>
+                      <input type="number" id="sick_leave" name="sick_leave" class="form-control" step="0.01">
+                  </div>
+                  <div class="mb-3">
+                      <label for="family_leave" class="form-label">Family Leave</label>
+                      <input type="number" id="family_leave" name="family_leave" class="form-control" step="0.01">
+                  </div>
+                  <div class="mb-3">
+                      <label for="maternity_leave" class="form-label">Maternity Leave</label>
+                      <input type="number" id="maternity_leave" name="maternity_leave" class="form-control" step="0.01">
+                  </div>
+                  <div class="mb-3">
+                      <label for="parental_leave" class="form-label">Parental Leave</label>
+                      <input type="number" id="parental_leave" name="parental_leave" class="form-control" step="0.01">
+                  </div>
+                  <div class="mb-3">
+                      <label for="study_leave" class="form-label">Study Leave</label>
+                      <input type="number" id="study_leave" name="study_leave" class="form-control" step="0.01">
+                  </div>
+              </div>
+              <div class="modal-footer">
+                  <button type="submit" class="btn btn-success">Save Changes</button>
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+              </div>
+          </form>
+      </div>
+  </div>
+</div>
